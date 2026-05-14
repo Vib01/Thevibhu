@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vibhu Sharma — Resume</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Barlow+Condensed:wght@300;400;500;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .resume-container {
+            max-width: 1000px;
+            margin: 6rem auto 4rem;
+            padding: 2rem;
+            background: var(--dark);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255,255,255,.05);
+        }
+        
+        .resume-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,.1);
+        }
+        
+        .resume-header h1 {
+            color: var(--red);
+            margin-bottom: 0.5rem;
+            font-family: var(--serif);
+            font-size: 3rem;
+            font-weight: 300;
+        }
+        
+        .resume-header p {
+            color: var(--silver);
+            margin: 0.5rem 0;
+            font-family: var(--cond);
+            letter-spacing: .2em;
+            text-transform: uppercase;
+            font-size: .8rem;
+        }
+        
+        .resume-section {
+            margin-bottom: 2.5rem;
+        }
+        
+        .resume-section h2 {
+            color: var(--red);
+            border-bottom: 2px solid var(--red);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+            font-family: var(--cond);
+            letter-spacing: .25em;
+            text-transform: uppercase;
+            font-size: .9rem;
+        }
+        
+        .experience-item, .education-item {
+            margin-bottom: 2rem;
+        }
+        
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+        
+        .item-header h3 {
+            margin: 0;
+            color: var(--white);
+            font-family: var(--cond);
+            letter-spacing: .15em;
+            text-transform: uppercase;
+            font-size: .85rem;
+        }
+        
+        .item-header .date {
+            color: var(--red);
+            font-weight: 500;
+            font-family: var(--cond);
+            letter-spacing: .1em;
+        }
+        
+        .item-subheader {
+            font-style: italic;
+            color: var(--silver);
+            margin-bottom: 0.75rem;
+            font-family: var(--body);
+        }
+        
+        .skills-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+        
+        .skill-tag {
+            background: rgba(200, 16, 46, 0.1);
+            color: var(--red);
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border: 1px solid rgba(200, 16, 46, 0.3);
+            font-family: var(--cond);
+            letter-spacing: .1em;
+            text-transform: uppercase;
+        }
+        
+        @media print {
+            .no-print {
+                display: none;
+            }
+            
+            .resume-container {
+                box-shadow: none;
+                margin: 0;
+                padding: 1cm;
+                background: white;
+                color: black;
+            }
+            
+            body {
+                background: white;
+                color: black;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="topnav no-print">
+        <div class="tn-brand">VIBHU SHARMA</div>
+        <div class="tn-social">
+            <a href="index.html">Home</a>
+            <a href="#" id="print-resume">Print</a>
+        </div>
+    </nav>
+
+    <div class="resume-container">
+        <header class="resume-header">
+            <h1>Vibhu Sharma</h1>
+            <p>Data Science Student | Tech Enthusiast | Problem Solver</p>
+            <p><i class="fas fa-envelope"></i> vibhus@mun.ca | <i class="fas fa-phone"></i> (123) 456-7890 | <i class="fas fa-map-marker-alt"></i> St. John's, NL</p>
+        </header>
+
+        <section class="resume-section">
+            <h2>Professional Summary</h2>
+            <p style="color: var(--silver); line-height: 1.8; font-family: var(--body);">Passionate and results-driven Data Science student with expertise in machine learning, data analysis, and full-stack development. Proven ability to design and implement data-driven solutions to complex problems. Strong background in Python, JavaScript, and modern web technologies.</p>
+        </section>
+
+        <section class="resume-section">
+            <h2>Experience</h2>
+            <div class="experience-item">
+                <div class="item-header">
+                    <h3>Data Science Intern</h3>
+                    <span class="date">June 2023 - Present</span>
+                </div>
+                <div class="item-subheader">Company Name, Location</div>
+                <ul style="color: var(--silver); line-height: 1.8;">
+                    <li>Developed and deployed machine learning models that improved data processing efficiency by 40%</li>
+                    <li>Created interactive dashboards for data visualization using Python and Tableau</li>
+                    <li>Collaborated with cross-functional teams to implement data-driven solutions</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="resume-section">
+            <h2>Education</h2>
+            <div class="education-item">
+                <div class="item-header">
+                    <h3>Bachelor of Science in Data Science</h3>
+                    <span class="date">Expected Graduation: 2024</span>
+                </div>
+                <div class="item-subheader">Memorial University, Newfoundland</div>
+                <p style="color: var(--silver);">GPA: 3.8/4.0</p>
+                <p style="color: var(--silver);">Relevant Coursework: Machine Learning, Data Structures, Algorithms, Database Systems, Web Development</p>
+            </div>
+        </section>
+
+        <section class="resume-section">
+            <h2>Skills</h2>
+            <div class="skills-list">
+                <span class="skill-tag">Python</span>
+                <span class="skill-tag">Machine Learning</span>
+                <span class="skill-tag">Data Analysis</span>
+                <span class="skill-tag">JavaScript</span>
+                <span class="skill-tag">React</span>
+                <span class="skill-tag">Node.js</span>
+                <span class="skill-tag">SQL</span>
+                <span class="skill-tag">Data Visualization</span>
+            </div>
+        </section>
+
+        <section class="resume-section">
+            <h2>Projects</h2>
+            <div class="experience-item">
+                <h3 style="color: var(--white); font-family: var(--cond); letter-spacing: .15em; text-transform: uppercase; font-size: .85rem;">Personal Portfolio Website</h3>
+                <p style="color: var(--silver); line-height: 1.8;">A responsive portfolio website built with HTML, CSS, and JavaScript. Features a modern design with smooth scrolling and interactive elements.</p>
+                <p style="color: var(--red); font-family: var(--cond); letter-spacing: .1em; text-transform: uppercase; font-size: .8rem;"><strong>Technologies:</strong> HTML5, CSS3, JavaScript, Git</p>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Print functionality
+        document.getElementById('print-resume').addEventListener('click', function(e) {
+            e.preventDefault();
+            window.print();
+        });
+    </script>
+</body>
+</html>
