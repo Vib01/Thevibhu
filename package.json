@@ -4,6 +4,7 @@
   "description": "Personal website with testing setup",
   "scripts": {
     "start": "python -m http.server 8000",
+    "update:strava": "node scripts/fetch-strava-stats.js",
     "test": "jest",
     "test:e2e": "playwright test",
     "test:visual": "playwright test --config=visual.config.ts"

@@ -9,11 +9,12 @@ const trackedIds = new Set(dots.map((dot) => dot.dataset.target));
 const loader = document.getElementById("loader");
 const videos = Array.from(document.querySelectorAll("video.media-video"));
 const stravaStats = {
-  longestRun: document.querySelector('[data-strava-stat="longestRun"]'),
-  weekDistance: document.querySelector('[data-strava-stat="weekDistance"]'),
-  lastActivity: document.querySelector('[data-strava-stat="lastActivity"]'),
+  totalMileage: document.querySelector('[data-strava-stat="totalMileage"]'),
+  yearDistance: document.querySelector('[data-strava-stat="yearDistance"]'),
+  latestDistance: document.querySelector('[data-strava-stat="latestDistance"]'),
 };
 const stravaStatus = document.querySelector("[data-strava-status]");
+const stravaActivities = document.querySelector("[data-strava-activities]");
 const stravaEndpoint = window.STRAVA_STATS_ENDPOINT || "assets/data/strava-stats.json";
 
 window.addEventListener("load", () => {
@@ -101,18 +102,54 @@ function formatDistance(value) {
   return `${distance.toFixed(distance >= 10 ? 0 : 1)} km`;
 }
 
+function formatActivityDate(value) {
+  const date = value ? new Date(value) : null;
+  if (!date || Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString([], { month: "short", day: "numeric" });
+}
+
+function renderStravaActivities(activities = []) {
+  if (!stravaActivities) return;
+
+  stravaActivities.innerHTML = "";
+  activities.slice(0, 4).forEach((activity) => {
+    const item = document.createElement("a");
+    item.href = activity.url || "#";
+    item.target = "_blank";
+    item.rel = "noopener";
+    item.className = "strava-activity";
+
+    const title = document.createElement("span");
+    title.textContent = activity.name || "Strava activity";
+
+    const meta = document.createElement("small");
+    const details = [
+      activity.type,
+      formatDistance(activity.distanceKm),
+      formatActivityDate(activity.startDate),
+    ].filter(Boolean);
+    meta.textContent = details.join(" • ");
+
+    item.append(title, meta);
+    stravaActivities.append(item);
+  });
+}
+
 function updateStravaStats(stats) {
-  if (stravaStats.longestRun && stats.longestRunKm !== undefined) {
-    stravaStats.longestRun.textContent = formatDistance(stats.longestRunKm);
+  if (stravaStats.totalMileage && stats.totalMileageKm !== undefined) {
+    stravaStats.totalMileage.textContent = formatDistance(stats.totalMileageKm);
   }
 
-  if (stravaStats.weekDistance && stats.weekDistanceKm !== undefined) {
-    stravaStats.weekDistance.textContent = formatDistance(stats.weekDistanceKm);
+  if (stravaStats.yearDistance && stats.yearDistanceKm !== undefined) {
+    stravaStats.yearDistance.textContent = formatDistance(stats.yearDistanceKm);
   }
 
-  if (stravaStats.lastActivity && stats.lastActivityName) {
-    stravaStats.lastActivity.textContent = stats.lastActivityName;
+  const latestActivity = stats.recentActivities && stats.recentActivities[0];
+  if (stravaStats.latestDistance && latestActivity) {
+    stravaStats.latestDistance.textContent = formatDistance(latestActivity.distanceKm);
   }
+
+  renderStravaActivities(stats.recentActivities);
 
   if (stravaStatus) {
     const updatedAt = stats.updatedAt ? new Date(stats.updatedAt) : null;
