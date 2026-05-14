@@ -1,9 +1,8 @@
 {
-  "isPlaceholder": true,
-  "updatedAt": null,
-  "totalMileageKm": null,
-  "totalRunKm": null,
-  "totalRideKm": null,
-  "yearDistanceKm": null,
+  "updatedAt": "2026-05-14T17:00:08.369Z",
+  "totalMileageKm": 344,
+  "totalRunKm": 344,
+  "totalRideKm": 0,
+  "yearDistanceKm": 135.2,
   "recentActivities": []
 }
