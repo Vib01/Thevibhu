@@ -1,6 +1,6 @@
 # Strava Widget Setup
 
-This site reads public widget data from `assets/data/strava-stats.json`.
+This site reads public mileage data from `assets/data/strava-stats.json`.
 
 Do not commit Strava secrets. Put them in GitHub Actions secrets.
 
@@ -27,11 +27,11 @@ Create a local `.env` file from `.env.example`, then run:
 npm run update:strava
 ```
 
-The script refreshes the Strava access token with your refresh token, calls the Strava athlete stats and recent activities endpoints, and rewrites `assets/data/strava-stats.json`.
+The script refreshes the Strava access token with your refresh token, calls the Strava athlete stats endpoint, and rewrites `assets/data/strava-stats.json`.
 
 ## Token Scopes
 
-The current widget can update total and year-to-date mileage with the basic `read` scope. Recent activities require a refresh token created with `activity:read`.
+The current website widget shows total and year-to-date mileage with the basic `read` scope. The script can optionally fetch recent activities if the refresh token has `activity:read`, but recent activities are not displayed on the page right now.
 
 Use this authorization URL to create a token that can read recent activities. Replace `YOUR_CLIENT_ID` if needed:
 

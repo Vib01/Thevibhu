@@ -11,10 +11,8 @@ const videos = Array.from(document.querySelectorAll("video.media-video"));
 const stravaStats = {
   totalMileage: document.querySelector('[data-strava-stat="totalMileage"]'),
   yearDistance: document.querySelector('[data-strava-stat="yearDistance"]'),
-  latestDistance: document.querySelector('[data-strava-stat="latestDistance"]'),
 };
 const stravaStatus = document.querySelector("[data-strava-status]");
-const stravaActivities = document.querySelector("[data-strava-activities]");
 const stravaEndpoint = window.STRAVA_STATS_ENDPOINT || "assets/data/strava-stats.json";
 
 window.addEventListener("load", () => {
@@ -102,50 +100,8 @@ function formatDistance(value) {
   return `${distance.toFixed(distance >= 10 ? 0 : 1)} km`;
 }
 
-function formatActivityDate(value) {
-  const date = value ? new Date(value) : null;
-  if (!date || Number.isNaN(date.getTime())) return "";
-  return date.toLocaleDateString([], { month: "short", day: "numeric" });
-}
-
-function renderStravaActivities(activities = []) {
-  if (!stravaActivities) return;
-
-  stravaActivities.innerHTML = "";
-  if (!activities.length) {
-    const empty = document.createElement("p");
-    empty.className = "strava-empty";
-    empty.textContent = "Recent activities need a Strava token with activity:read scope.";
-    stravaActivities.append(empty);
-    return;
-  }
-
-  activities.slice(0, 4).forEach((activity) => {
-    const item = document.createElement("a");
-    item.href = activity.url || "#";
-    item.target = "_blank";
-    item.rel = "noopener";
-    item.className = "strava-activity";
-
-    const title = document.createElement("span");
-    title.textContent = activity.name || "Strava activity";
-
-    const meta = document.createElement("small");
-    const details = [
-      activity.type,
-      formatDistance(activity.distanceKm),
-      formatActivityDate(activity.startDate),
-    ].filter(Boolean);
-    meta.textContent = details.join(" / ");
-
-    item.append(title, meta);
-    stravaActivities.append(item);
-  });
-}
-
 function updateStravaStats(stats) {
   if (stats.isPlaceholder) {
-    renderStravaActivities([]);
     if (stravaStatus) {
       stravaStatus.textContent = "Connect the GitHub Actions Strava secrets, then run the sync workflow.";
     }
@@ -159,13 +115,6 @@ function updateStravaStats(stats) {
   if (stravaStats.yearDistance && stats.yearDistanceKm !== undefined) {
     stravaStats.yearDistance.textContent = formatDistance(stats.yearDistanceKm);
   }
-
-  const latestActivity = stats.recentActivities && stats.recentActivities[0];
-  if (stravaStats.latestDistance && latestActivity) {
-    stravaStats.latestDistance.textContent = formatDistance(latestActivity.distanceKm);
-  }
-
-  renderStravaActivities(stats.recentActivities);
 
   if (stravaStatus) {
     const updatedAt = stats.updatedAt ? new Date(stats.updatedAt) : null;

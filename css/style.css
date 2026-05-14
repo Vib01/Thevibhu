@@ -777,7 +777,7 @@ blockquote {
 
 .strava-stats {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.7rem;
 }
 
@@ -799,69 +799,11 @@ blockquote {
   margin-bottom: 0.55rem;
 }
 
-.strava-activity-list {
-  margin-top: 1rem;
-  display: grid;
-  gap: 0.55rem;
-}
-
-.strava-activity {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  border: 1px solid var(--line-dark);
-  padding: 0.75rem 0.85rem;
-  transition: border-color 0.2s ease, transform 0.2s ease;
-}
-
-.strava-activity:hover {
-  border-color: rgba(252, 76, 2, 0.58);
-  transform: translateX(4px);
-}
-
-.strava-activity span {
-  color: #f6f2ea;
-  font-size: 0.9rem;
-}
-
-.strava-activity small {
-  flex: 0 0 auto;
-  color: #b8afa0;
-  font-family: var(--cond);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-size: 0.58rem;
-  text-align: right;
-}
-
-.strava-empty {
-  border: 1px solid var(--line-dark);
-  padding: 0.85rem;
-  color: #b8afa0;
-  line-height: 1.7;
-  font-size: 0.88rem;
-}
-
 .strava-card p {
   margin-top: 1.2rem;
   color: #b8afa0;
   line-height: 1.7;
   font-size: 0.88rem;
-}
-
-.strava-embed-wrap {
-  margin-top: 1rem;
-  overflow: hidden;
-  background: #ffffff;
-  display: grid;
-  place-items: center;
-  min-height: 160px;
-}
-
-.strava-embed-wrap iframe {
-  display: block;
-  width: min(100%, 300px);
-  max-width: 100%;
 }
 
 .gallery-track {
