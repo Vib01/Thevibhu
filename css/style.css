@@ -855,6 +855,7 @@ blockquote {
   background: #ffffff;
   display: grid;
   place-items: center;
+  min-height: 160px;
 }
 
 .strava-embed-wrap iframe {
