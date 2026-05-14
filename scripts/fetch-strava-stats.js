@@ -100,6 +100,11 @@ async function getRecentActivities(accessToken) {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
   } catch (error) {
+    if (error.message.includes("activity:read_permission")) {
+      console.warn("Skipping recent activities because the Strava token is missing activity:read scope.");
+      return [];
+    }
+
     throw new Error(`Could not fetch Strava activities. Check token scopes. ${error.message}`);
   }
 }
@@ -135,10 +140,8 @@ async function main() {
 
   const accessToken = await refreshAccessToken();
   const athleteId = requireEnv("STRAVA_ATHLETE_ID");
-  const [stats, activities] = await Promise.all([
-    getStats(accessToken, athleteId),
-    getRecentActivities(accessToken),
-  ]);
+  const stats = await getStats(accessToken, athleteId);
+  const activities = await getRecentActivities(accessToken);
 
   const widgetData = buildWidgetData(stats, activities);
   await fs.mkdir(path.dirname(outputPath), { recursive: true });

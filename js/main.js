@@ -115,7 +115,7 @@ function renderStravaActivities(activities = []) {
   if (!activities.length) {
     const empty = document.createElement("p");
     empty.className = "strava-empty";
-    empty.textContent = "Recent activities will appear after the first Strava sync.";
+    empty.textContent = "Recent activities need a Strava token with activity:read scope.";
     stravaActivities.append(empty);
     return;
   }

@@ -29,6 +29,18 @@ npm run update:strava
 
 The script refreshes the Strava access token with your refresh token, calls the Strava athlete stats and recent activities endpoints, and rewrites `assets/data/strava-stats.json`.
 
+## Token Scopes
+
+The current widget can update total and year-to-date mileage with the basic `read` scope. Recent activities require a refresh token created with `activity:read`.
+
+Use this authorization URL to create a token that can read recent activities. Replace `YOUR_CLIENT_ID` if needed:
+
+```text
+https://www.strava.com/oauth/authorize?client_id=YOUR_CLIENT_ID&response_type=code&redirect_uri=http://localhost/exchange_token&approval_prompt=force&scope=read,activity:read
+```
+
+After authorizing, exchange the returned `code` for a new refresh token, then update the `STRAVA_REFRESH_TOKEN` secret.
+
 Strava API docs:
 
 - https://developers.strava.com/docs/getting-started/
