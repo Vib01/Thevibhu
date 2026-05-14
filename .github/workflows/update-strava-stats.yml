@@ -11,6 +11,7 @@ permissions:
 jobs:
   update-strava-stats:
     runs-on: ubuntu-latest
+    environment: github-pages
 
     steps:
       - name: Check out repository

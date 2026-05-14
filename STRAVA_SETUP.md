@@ -2,7 +2,9 @@
 
 This site reads public widget data from `assets/data/strava-stats.json`.
 
-Do not commit Strava secrets. Put them in GitHub Actions repository secrets:
+Do not commit Strava secrets. Put them in GitHub Actions secrets.
+
+This repository's workflow is attached to the `github-pages` environment, so either add these as `github-pages` environment secrets or change the workflow to use repository-level secrets only:
 
 - `STRAVA_CLIENT_ID`
 - `STRAVA_CLIENT_SECRET`
@@ -14,6 +16,8 @@ For this site, `STRAVA_ATHLETE_ID` is the numeric athlete id from your Strava pr
 ## GitHub Refresh
 
 The workflow at `.github/workflows/update-strava-stats.yml` refreshes the JSON cache every 6 hours and can also be run manually from the GitHub Actions tab.
+
+After adding or changing secrets, run **Actions > Update Strava Stats > Run workflow** manually. The website updates only after that workflow commits a new `assets/data/strava-stats.json`.
 
 ## Local Refresh
 
