@@ -112,6 +112,14 @@ function renderStravaActivities(activities = []) {
   if (!stravaActivities) return;
 
   stravaActivities.innerHTML = "";
+  if (!activities.length) {
+    const empty = document.createElement("p");
+    empty.className = "strava-empty";
+    empty.textContent = "Recent activities will appear after the first Strava sync.";
+    stravaActivities.append(empty);
+    return;
+  }
+
   activities.slice(0, 4).forEach((activity) => {
     const item = document.createElement("a");
     item.href = activity.url || "#";
@@ -128,7 +136,7 @@ function renderStravaActivities(activities = []) {
       formatDistance(activity.distanceKm),
       formatActivityDate(activity.startDate),
     ].filter(Boolean);
-    meta.textContent = details.join(" • ");
+    meta.textContent = details.join(" / ");
 
     item.append(title, meta);
     stravaActivities.append(item);
@@ -136,6 +144,14 @@ function renderStravaActivities(activities = []) {
 }
 
 function updateStravaStats(stats) {
+  if (stats.isPlaceholder) {
+    renderStravaActivities([]);
+    if (stravaStatus) {
+      stravaStatus.textContent = "Connect the GitHub Actions Strava secrets, then run the sync workflow.";
+    }
+    return;
+  }
+
   if (stravaStats.totalMileage && stats.totalMileageKm !== undefined) {
     stravaStats.totalMileage.textContent = formatDistance(stats.totalMileageKm);
   }

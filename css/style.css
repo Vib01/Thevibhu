@@ -834,6 +834,14 @@ blockquote {
   text-align: right;
 }
 
+.strava-empty {
+  border: 1px solid var(--line-dark);
+  padding: 0.85rem;
+  color: #b8afa0;
+  line-height: 1.7;
+  font-size: 0.88rem;
+}
+
 .strava-card p {
   margin-top: 1.2rem;
   color: #b8afa0;

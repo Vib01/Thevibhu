@@ -1,19 +1,9 @@
 {
-  "updatedAt": "2026-05-14T00:00:00-02:30",
-  "totalMileageKm": 40,
-  "totalRunKm": 40,
-  "totalRideKm": 0,
-  "yearDistanceKm": 40,
-  "recentActivities": [
-    {
-      "id": 18491904773,
-      "name": "Latest Strava Activity",
-      "type": "Run",
-      "distanceKm": 40,
-      "movingTimeSeconds": 0,
-      "elevationGainM": 0,
-      "startDate": "2026-05-14T00:00:00-02:30",
-      "url": "https://www.strava.com/activities/18491904773"
-    }
-  ]
+  "isPlaceholder": true,
+  "updatedAt": null,
+  "totalMileageKm": null,
+  "totalRunKm": null,
+  "totalRideKm": null,
+  "yearDistanceKm": null,
+  "recentActivities": []
 }
