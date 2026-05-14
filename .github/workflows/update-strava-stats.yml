@@ -8,6 +8,9 @@ on:
 permissions:
   contents: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   update-strava-stats:
     runs-on: ubuntu-latest
@@ -21,6 +24,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+
+      - name: Check Strava secret availability
+        run: |
+          test -n "$STRAVA_CLIENT_ID" && echo "STRAVA_CLIENT_ID: present" || echo "STRAVA_CLIENT_ID: missing"
+          test -n "$STRAVA_CLIENT_SECRET" && echo "STRAVA_CLIENT_SECRET: present" || echo "STRAVA_CLIENT_SECRET: missing"
+          test -n "$STRAVA_REFRESH_TOKEN" && echo "STRAVA_REFRESH_TOKEN: present" || echo "STRAVA_REFRESH_TOKEN: missing"
+          test -n "$STRAVA_ATHLETE_ID" && echo "STRAVA_ATHLETE_ID: present" || echo "STRAVA_ATHLETE_ID: missing"
+        env:
+          STRAVA_CLIENT_ID: ${{ secrets.STRAVA_CLIENT_ID }}
+          STRAVA_CLIENT_SECRET: ${{ secrets.STRAVA_CLIENT_SECRET }}
+          STRAVA_REFRESH_TOKEN: ${{ secrets.STRAVA_REFRESH_TOKEN }}
+          STRAVA_ATHLETE_ID: ${{ secrets.STRAVA_ATHLETE_ID }}
 
       - name: Fetch Strava stats
         run: node scripts/fetch-strava-stats.js

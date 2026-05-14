@@ -38,7 +38,9 @@ async function loadLocalEnv() {
 
 function requireEnv(name) {
   const value = process.env[name];
-  if (!value) throw new Error(`Missing ${name}`);
+  if (!value) {
+    throw new Error(`Missing ${name}. Add it as a GitHub Actions secret for the github-pages environment.`);
+  }
   return value;
 }
 
@@ -66,26 +68,40 @@ async function refreshAccessToken() {
     grant_type: "refresh_token",
   });
 
-  const token = await fetchJson(STRAVA_TOKEN_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body,
-  });
+  let token;
+
+  try {
+    token = await fetchJson(STRAVA_TOKEN_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body,
+    });
+  } catch (error) {
+    throw new Error(`Could not refresh Strava access token. Check STRAVA_CLIENT_ID, STRAVA_CLIENT_SECRET, and STRAVA_REFRESH_TOKEN. ${error.message}`);
+  }
 
   if (!token.access_token) throw new Error("Strava did not return an access token.");
   return token.access_token;
 }
 
 async function getStats(accessToken, athleteId) {
-  return fetchJson(`${STRAVA_API}/athletes/${athleteId}/stats`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
+  try {
+    return await fetchJson(`${STRAVA_API}/athletes/${athleteId}/stats`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+  } catch (error) {
+    throw new Error(`Could not fetch Strava athlete stats. Check STRAVA_ATHLETE_ID and token permissions. ${error.message}`);
+  }
 }
 
 async function getRecentActivities(accessToken) {
-  return fetchJson(`${STRAVA_API}/athlete/activities?per_page=8&page=1`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
+  try {
+    return await fetchJson(`${STRAVA_API}/athlete/activities?per_page=8&page=1`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+  } catch (error) {
+    throw new Error(`Could not fetch Strava activities. Check token scopes. ${error.message}`);
+  }
 }
 
 function buildWidgetData(stats, activities) {
