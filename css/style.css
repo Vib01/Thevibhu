@@ -272,6 +272,7 @@ main {
 
 .section {
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .intro-strip {
@@ -1066,6 +1067,195 @@ body.ready .hero-content .reveal {
 
   .topbar-nav {
     gap: 1rem;
+  }
+
+  .btn,
+  .strava-link,
+  .chapter-link-btn {
+    padding: 0.95rem 1.6rem;
+  }
+}
+
+@media (max-width: 600px) {
+  html {
+    font-size: 15px;
+  }
+
+  .topbar {
+    height: 56px;
+    padding: 0 1rem;
+  }
+
+  .topbar-brand {
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+  }
+
+  .topbar-nav {
+    gap: 0.7rem;
+  }
+
+  .topbar-nav a {
+    font-size: 0.56rem;
+    letter-spacing: 0.1em;
+  }
+
+  .section {
+    min-height: 100dvh;
+  }
+
+  .hero-content {
+    padding: 0 1.2rem 4rem;
+    max-width: 100%;
+  }
+
+  h1 {
+    font-size: clamp(2.6rem, 14vw, 4rem);
+  }
+
+  .hero-copy {
+    font-size: 0.9rem;
+    max-width: 100%;
+  }
+
+  .hero-actions {
+    flex-wrap: wrap;
+    gap: 0.7rem;
+  }
+
+  .hero-actions .btn {
+    flex: 1 1 auto;
+    text-align: center;
+    padding: 0.85rem 1.2rem;
+  }
+
+  .scroll-mark {
+    right: 1.2rem;
+    bottom: 1.2rem;
+  }
+
+  .intro-strip {
+    padding: 3rem 1.2rem;
+  }
+
+  .intro-copy h3 {
+    font-size: clamp(1.9rem, 9vw, 2.6rem);
+  }
+
+  .intro-copy p {
+    max-width: 100%;
+  }
+
+  .teaser-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .chapter-select {
+    padding: 1.6rem 1.2rem;
+  }
+
+  .chapter-select div {
+    gap: 0.9rem 1.2rem;
+  }
+
+  .chapter {
+    padding: 3rem 1.2rem;
+  }
+
+  .chapter-head {
+    flex-wrap: wrap;
+    margin-bottom: 1.6rem;
+  }
+
+  .chapter-text h3 {
+    font-size: clamp(1.9rem, 10vw, 2.8rem);
+  }
+
+  .chapter-text p,
+  .strava-copy p:not(.chapter-cue),
+  .media-content p {
+    max-width: 100%;
+    font-size: 0.9rem;
+  }
+
+  .mini-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .mini-stats div {
+    padding: 0.6rem 0.5rem;
+  }
+
+  .mini-stats strong {
+    font-size: 1.3rem;
+  }
+
+  .mini-stats span {
+    font-size: 0.52rem;
+    letter-spacing: 0.04em;
+  }
+
+  .media-full {
+    min-height: 100dvh;
+  }
+
+  .media-overlay {
+    background: linear-gradient(to top, rgba(19, 19, 19, 0.96) 0%, rgba(19, 19, 19, 0.55) 55%, rgba(19, 19, 19, 0.5) 100%);
+  }
+
+  .media-content {
+    max-width: 100%;
+  }
+
+  blockquote {
+    font-size: clamp(1.2rem, 6vw, 1.7rem);
+  }
+
+  .strava-feature {
+    gap: 1.4rem;
+  }
+
+  .strava-copy h3 {
+    font-size: clamp(1.8rem, 9vw, 2.6rem);
+  }
+
+  .strava-card {
+    min-height: 0;
+    padding: 1rem;
+  }
+
+  .strava-card-head {
+    flex-direction: column;
+    gap: 0.3rem;
+    margin-bottom: 1rem;
+  }
+
+  .strava-card-head strong {
+    max-width: 100%;
+    text-align: left;
+    font-size: 1.3rem;
+  }
+
+  .strava-stats div {
+    min-height: 80px;
+    padding: 0.7rem;
+  }
+
+  .gallery-item {
+    min-height: 240px;
+  }
+
+  .chapter-gallery .media-slot {
+    min-height: 180px;
+  }
+
+  .contact h3 {
+    font-size: clamp(1.8rem, 9vw, 2.6rem);
+  }
+
+  .contact-links a {
+    font-size: 0.7rem;
   }
 }
 
