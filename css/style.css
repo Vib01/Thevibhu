@@ -379,6 +379,7 @@ main {
 
 .hero {
   position: relative;
+  overflow: hidden;
   display: flex;
   align-items: flex-end;
 }
