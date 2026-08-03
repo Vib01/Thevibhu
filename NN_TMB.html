@@ -93,8 +93,8 @@
   <button onclick="highlight('all')" id="btn-all" class="active">All</button>
   <button onclick="highlight('x')"  id="btn-x">Inputs xᵢ</button>
   <button onclick="highlight('L')"  id="btn-L">Layer (1)</button>
-  <button onclick="highlight('one')" id="btn-one">Layer (L−1)</button>
-  <button onclick="highlight('zero')" id="btn-zero">Layer (L), d₁⁽ᴸ⁾</button>
+  <button onclick="highlight('one')" id="btn-one">Layer (L)</button>
+  <button onclick="highlight('zero')" id="btn-zero">Linear predictor, d₁</button>
   <button onclick="highlight('z')" id="btn-z">Random effects zᵢᵀbᵢ</button>
 </div>
 
@@ -204,7 +204,7 @@ function draw() {
   ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,W,H);
   NODES.length = 0;
 
-  // ---- edges: inputs -> layer (L) ----
+  // ---- edges: inputs -> layer (1) ----
   rowY.forEach((iy, i) => {
     rowY.forEach((hy, h) => {
       line(XI+34, iy, XL-13, hy, '#333', 0.6, edgeAlpha('x-L'));
@@ -216,18 +216,18 @@ function draw() {
   {
     const wa = selected==='all'||selected==='L' ? 0.9 : 0.1;
     const p11 = edgeLabelPos(XI+34, rowY[0], XL-13, rowY[0], 0.5, -13);
-    text('w₁₁⁽¹⁾', p11.x, p11.y, '13px sans-serif', '#333', 'center', wa);
+    text('w₁₁⁽¹⁾', p11.x, p11.y, '15px sans-serif', '#333', 'center', wa);
     const p12 = edgeLabelPos(XI+34, rowY[1], XL-13, rowY[0], 0.68, 12);
-    text('w₁₂⁽¹⁾', p12.x, p12.y, '13px sans-serif', '#333', 'center', wa);
+    text('w₁₂⁽¹⁾', p12.x, p12.y, '15px sans-serif', '#333', 'center', wa);
     const p22 = edgeLabelPos(XI+34, rowY[1], XL-13, rowY[1], 0.5, -13);
-    text('w₂₂⁽¹⁾', p22.x, p22.y, '13px sans-serif', '#333', 'center', wa);
+    text('w₂₂⁽¹⁾', p22.x, p22.y, '15px sans-serif', '#333', 'center', wa);
     const p1p = edgeLabelPos(XI+34, rowY[3], XL-13, rowY[0], 0.62, 14);
-    text('w₁ₚ⁽¹⁾', p1p.x, p1p.y, '13px sans-serif', '#333', 'center', wa);
+    text('wₚ₁⁽¹⁾', p1p.x, p1p.y, '15px sans-serif', '#333', 'center', wa);
     const pkp = edgeLabelPos(XI+34, rowY[3], XL-13, rowY[3], 0.5, 15);
-    text('wₖ₁ₚ⁽¹⁾', pkp.x, pkp.y, '13px sans-serif', '#333', 'center', wa);
+    text('wₖₚ₁⁽¹⁾', pkp.x, pkp.y, '15px sans-serif', '#333', 'center', wa);
   }
 
-  // ---- edges: layer (L) -> layer (1), drawn as a compressed "..." passage ----
+  // ---- edges: layer (1) -> layer (L), drawn as a compressed "..." passage ----
   rowY.forEach((hy1) => {
     rowY.forEach((hy2) => {
       line(XL+13, hy1, XONE-13, hy2, '#333', 0.5, edgeAlpha('L-one')*0.6);
@@ -237,28 +237,29 @@ function draw() {
     text('⋯', (XL+XONE)/2, y, '26px sans-serif', '#888', 'center', selected==='all'?0.8:(edgeAlpha('L-one')>0.5?0.9:0.15));
   });
 
-  // ---- edges: layer (1) -> d1(L) ----
+  // ---- edges: layer (L) -> d1 (final linear predictor) ----
   rowY.forEach((hy) => {
     line(XONE+13, hy, XD0-15, d0Y, '#333', 0.7, edgeAlpha('one-d0'));
   });
-  // w11: d1(L-1) -> d1(L)   w12: d2(L-1) -> d1(L)   w1k: d_k(L-1) -> d1(L) (single target, "1", always first)
+  // weights from layer L into the single linear-predictor node d1 (target is always d1,
+  // so only the source index is shown): w1(L): d1(L)->d1   w2(L): d2(L)->d1   wk(L): dk(L)->d1
   {
     const wa = selected==='all'||selected==='one'||selected==='zero' ? 0.9 : 0.1;
     const q11 = edgeLabelPos(XONE+13, rowY[0], XD0-15, d0Y, 0.32, -12);
-    text('w₁₁⁽ᴸ⁾', q11.x, q11.y, '13px sans-serif', '#333', 'center', wa);
+    text('w₁⁽ᴸ⁾', q11.x, q11.y, '15px sans-serif', '#333', 'center', wa);
     const q12 = edgeLabelPos(XONE+13, rowY[1], XD0-15, d0Y, 0.32, -12);
-    text('w₁₂⁽ᴸ⁾', q12.x, q12.y, '13px sans-serif', '#333', 'center', wa);
+    text('w₂⁽ᴸ⁾', q12.x, q12.y, '15px sans-serif', '#333', 'center', wa);
     const q1k = edgeLabelPos(XONE+13, rowY[3], XD0-15, d0Y, 0.34, -12);
     ctx.save();
     ctx.translate(q1k.x, q1k.y);
     ctx.rotate(Math.atan2(d0Y-rowY[3], (XD0-15)-(XONE+13)));
     ctx.globalAlpha = wa;
-    ctx.font = '12.5px sans-serif'; ctx.fillStyle = '#333'; ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.fillText('w₁ₖ⁽ᴸ⁾', 0, 0);
+    ctx.font = '15px sans-serif'; ctx.fillStyle = '#333'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('wₖ⁽ᴸ⁾', 0, 0);
     ctx.restore();
   }
 
-  // ---- d1(L) -> μi ----
+  // ---- d1 -> μi ----
   arrow(XD0+15, d0Y, XMU-30, muY, CL, 1.6, edgeAlpha('d0-mu'));
 
   // ---- zi^T bi -> μi, labeled fa(.) ----
@@ -278,26 +279,28 @@ function draw() {
     const a = nodeAlpha('L');
     circle(XL, y, 15, a);
     const lbl = i===dotsRowIdx ? '⋮' : (i===3 ? 'dₖ₁⁽¹⁾' : `d${i+1}⁽¹⁾`);
-    text(lbl, XL, y, i===dotsRowIdx ? '16px sans-serif' : '10.5px sans-serif', '#111', 'center', a);
+    const fnt = i===dotsRowIdx ? '16px sans-serif' : (i===3 ? '12.5px sans-serif' : '10.5px sans-serif');
+    text(lbl, XL, y, fnt, '#111', 'center', a);
     NODES.push({x:XL, y, r:15, type:'L', idx:i});
   });
   text('αᵢ⁽¹⁾ = fₐ(w⁽¹⁾xᵢ+d⁽¹⁾)', XL, topY-58, '14.5px sans-serif', '#111', 'center', 0.95);
 
-  // ---- layer (L-1) nodes, last hidden layer nearest the output ----
+  // ---- layer (L) nodes, last hidden layer nearest the output ----
   rowY.forEach((y, i) => {
     const a = nodeAlpha('one');
     circle(XONE, y, 15, a);
-    const lbl = i===dotsRowIdx ? '⋮' : (i===3 ? 'dₖ⁽ᴸ⁻¹⁾' : `d${i+1}⁽ᴸ⁻¹⁾`);
-    text(lbl, XONE, y, i===dotsRowIdx ? '16px sans-serif' : '9.5px sans-serif', '#111', 'center', a);
+    const lbl = i===dotsRowIdx ? '⋮' : (i===3 ? 'dₖ⁽ᴸ⁾' : `d${i+1}⁽ᴸ⁾`);
+    const fnt = i===dotsRowIdx ? '16px sans-serif' : (i===3 ? '11.5px sans-serif' : '9.5px sans-serif');
+    text(lbl, XONE, y, fnt, '#111', 'center', a);
     NODES.push({x:XONE, y, r:15, type:'one', idx:i});
   });
-  text('αᵢ⁽ᴸ⁻¹⁾ = fₐ(w⁽ᴸ⁻¹⁾αᵢ⁽ᴸ⁻²⁾+d⁽ᴸ⁻¹⁾)', XONE, topY-58, '13.5px sans-serif', '#111', 'center', 0.95);
+  text('αᵢ⁽ᴸ⁾ = fₐ(w⁽ᴸ⁾αᵢ⁽ᴸ⁻¹⁾+d⁽ᴸ⁾)', XONE, topY-58, '13.5px sans-serif', '#111', 'center', 0.95);
 
-  // ---- d1(L) node: final layer, pre-activation linear predictor ----
+  // ---- d1 node: linear predictor, combines layer L's output ahead of fa(.) and the random effects ----
   {
     const a = nodeAlpha('d0');
     circle(XD0, d0Y, 15, a, NODE_STROKE_RED);
-    text('d₁⁽ᴸ⁾', XD0, d0Y, '10.5px sans-serif', '#111', 'center', a);
+    text('d₁', XD0, d0Y, '11px sans-serif', '#111', 'center', a);
     NODES.push({x:XD0, y:d0Y, r:15, type:'d0', idx:0});
   }
 
@@ -323,30 +326,16 @@ function draw() {
       ['xᵢ', 'input features'],
       ['dᵢ⁽ˡ⁾', 'hidden unit i, layer l'],
       ['w⁽ˡ⁾, d⁽ˡ⁾', 'weights and biases, layer l'],
+      ['d₁', 'final linear predictor (pre-activation)'],
       ['fₐ( · )', 'nonlinear activation function'],
       ['zᵢᵀbᵢ', 'random effects linear predictor'],
       ['μᵢ', 'model output'],
     ];
     entries.forEach(([sym, desc], i) => {
       const y = legendTop + lineH * (i + 1);
-      text(sym, legendX, y, '12.5px sans-serif', i>=4 ? '#c8102e' : '#333', 'left', 1);
+      text(sym, legendX, y, '12.5px sans-serif', i>=5 ? '#c8102e' : '#333', 'left', 1);
       text(desc, legendX + 92, y, '12.5px sans-serif', '#555', 'left', 1);
     });
-  }
-
-  // ---- final-layer callout, filling the clear space right of mu_i ----
-  {
-    const bx = 900, by = 340, bw = 260, bh = 150;
-    ctx.save();
-    ctx.fillStyle = 'rgba(200,16,46,0.045)';
-    ctx.strokeStyle = 'rgba(200,16,46,0.35)'; ctx.lineWidth = 1.2;
-    ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 6); ctx.fill(); ctx.stroke();
-    ctx.restore();
-    text('FINAL LAYER  (l = L)', bx + 16, by + 26, 'bold 11.5px sans-serif', '#c8102e', 'left', 1);
-    text('d₁⁽ᴸ⁾ = w⁽ᴸ⁾αᵢ⁽ᴸ⁻¹⁾ + d⁽ᴸ⁾', bx + 16, by + 58, '13.5px sans-serif', '#333', 'left', 1);
-    text('μᵢ = fₐ( d₁⁽ᴸ⁾ + zᵢᵀbᵢ )', bx + 16, by + 88, 'bold 14.5px sans-serif', '#111', 'left', 1);
-    text('random effects enter the linear', bx + 16, by + 116, '11px sans-serif', '#777', 'left', 1);
-    text('predictor before applying fₐ( · )', bx + 16, by + 132, '11px sans-serif', '#777', 'left', 1);
   }
 }
 
