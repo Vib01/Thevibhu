@@ -392,8 +392,8 @@ main {
 .hero-shade {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to right, rgba(9, 9, 9, 0.88) 0%, rgba(9, 9, 9, 0.35) 55%, rgba(9, 9, 9, 0.1) 100%),
-    linear-gradient(to top, rgba(9, 9, 9, 0.95) 0%, rgba(9, 9, 9, 0) 45%);
+  background: linear-gradient(200deg, rgba(9, 9, 9, 0) 30%, rgba(9, 9, 9, 0.55) 62%, rgba(9, 9, 9, 0.92) 88%),
+    radial-gradient(120% 100% at 15% 100%, rgba(9, 9, 9, 0.85) 0%, rgba(9, 9, 9, 0.5) 35%, rgba(9, 9, 9, 0) 65%);
 }
 
 .hero-content {
@@ -615,7 +615,7 @@ h2 {
 .media-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to right, rgba(19, 19, 19, 0.94) 0%, rgba(19, 19, 19, 0.4) 60%, rgba(19, 19, 19, 0.8) 100%);
+  background: linear-gradient(100deg, rgba(19, 19, 19, 0.95) 0%, rgba(19, 19, 19, 0.55) 42%, rgba(19, 19, 19, 0.25) 65%, rgba(19, 19, 19, 0.7) 100%);
 }
 
 .media-content {
@@ -653,34 +653,130 @@ blockquote {
 .cards {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1rem;
+  gap: 1.4rem;
+  counter-reset: card-index;
 }
 
 .card {
+  position: relative;
+  overflow: hidden;
   border: 1px solid var(--line-light);
   background: rgba(255, 255, 255, 0.36);
-  transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
+  counter-increment: card-index;
+  transition: transform 0.4s var(--ease), box-shadow 0.4s var(--ease), border-color 0.4s var(--ease);
 }
 
 .card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 14px 30px rgba(18, 13, 8, 0.14);
+  transform: translateY(-8px);
+  border-color: rgba(9, 9, 9, 0.3);
+  box-shadow: 0 22px 40px rgba(18, 13, 8, 0.18);
+}
+
+.card::before {
+  content: counter(card-index, decimal-leading-zero);
+  position: absolute;
+  top: 0.85rem;
+  left: 0.85rem;
+  z-index: 3;
+  font-family: var(--cond);
+  letter-spacing: 0.14em;
+  font-size: 0.66rem;
+  color: var(--white);
+  background: rgba(9, 9, 9, 0.55);
+  padding: 0.3rem 0.55rem;
+}
+
+.card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--red);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.45s var(--ease);
+  z-index: 3;
+}
+
+.card:hover::after {
+  transform: scaleX(1);
+}
+
+.card-link {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  color: inherit;
 }
 
 .card-media {
+  position: relative;
   aspect-ratio: 16 / 10;
   min-height: 0;
+}
+
+.card-media .project-image {
+  transition: transform 0.6s var(--ease);
+}
+
+.card:hover .card-media .project-image {
+  transform: scale(1.08);
+}
+
+.card-view {
+  position: absolute;
+  left: 0.85rem;
+  right: 0.85rem;
+  bottom: 0.85rem;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--cond);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.6rem;
+  color: var(--white);
+  padding: 0.6rem 0.8rem;
+  background: rgba(9, 9, 9, 0.6);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.35s var(--ease), transform 0.35s var(--ease);
+}
+
+.card-view::after {
+  content: "\2192";
+  margin-left: 0.6rem;
+  transition: transform 0.35s var(--ease);
+}
+
+.card:hover .card-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.card:hover .card-view::after {
+  transform: translateX(4px);
+}
+
+.card-body {
+  padding: 1.1rem 1.1rem 1.3rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .card h4 {
   font-family: var(--serif);
   font-size: 1.55rem;
   font-weight: 400;
-  margin: 1rem 1rem 0.6rem;
+  margin: 0 0 0.6rem;
 }
 
 .card p {
-  margin: 0 1rem 1.2rem;
+  margin: 0;
   line-height: 1.8;
   color: #403b34;
 }
