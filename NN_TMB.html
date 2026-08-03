@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Figure 1 — The architecture of a multi-layer GNMM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,500;1,400&family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #090909; --coal: #131313; --paper: #ede7de;
+    --white: #f6f2ea; --muted: #9f978a; --red: #c8102e; --red-2: #e11434;
+    --line: rgba(255,255,255,0.11);
+    --serif: "Cormorant Garamond", Georgia, serif;
+    --cond: "Barlow Condensed", sans-serif;
+    --body: "Barlow", sans-serif;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html {
+    background: radial-gradient(circle at 15% 0%, #17181c 0%, var(--black) 55%);
+  }
+  body {
+    margin: 0 auto; max-width: 1260px;
+    padding: 2.4rem clamp(1.2rem, 4vw, 3rem) 3rem;
+    font-family: var(--body);
+    color: var(--white);
+  }
+  .kicker {
+    font-family: var(--cond); text-transform: uppercase; letter-spacing: 0.28em;
+    font-size: 0.72rem; color: var(--red); margin: 0 0 0.7rem;
+  }
+  h1 {
+    font-family: var(--serif); font-weight: 300; font-style: italic;
+    font-size: clamp(1.9rem, 3.4vw, 2.7rem); margin: 0 0 0.6rem; color: var(--white);
+    line-height: 1.05;
+  }
+  .subtitle {
+    font-family: var(--cond); text-transform: uppercase; letter-spacing: 0.1em;
+    font-size: 0.86rem; color: #c7beaf; margin: 0 0 1.6rem;
+  }
+  #canvas-wrap {
+    position: relative; background: #fbfaf7; border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 4px; padding: 1.1rem 1.1rem 0.6rem; overflow: hidden;
+    max-width: 1220px;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.45);
+  }
+  #canvas-wrap::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+    background: linear-gradient(90deg, var(--red) 0%, var(--red-2) 45%, transparent 100%);
+  }
+  canvas { display: block; max-width: 100%; height: auto; cursor: default; }
+  .controls {
+    display: flex; gap: 0.7rem; flex-wrap: wrap; margin-top: 1.6rem; align-items: center;
+  }
+  .ctrl-label {
+    font-family: var(--cond); text-transform: uppercase; letter-spacing: 0.16em;
+    font-size: 0.78rem; color: var(--muted); margin-right: 0.3rem;
+  }
+  button {
+    font-family: var(--cond); text-transform: uppercase; letter-spacing: 0.1em;
+    font-size: 0.82rem; padding: 0.55rem 1.05rem;
+    border: 1px solid var(--line); background: rgba(255,255,255,0.03); color: var(--white);
+    border-radius: 2px; cursor: pointer;
+    transition: transform 0.25s var(--ease), background 0.25s var(--ease), border-color 0.25s var(--ease);
+  }
+  button:hover { border-color: rgba(255,255,255,0.35); transform: translateY(-2px); }
+  button.active { background: var(--red); border-color: var(--red); color: #fff; }
+  button.active:hover { background: var(--red-2); }
+  .hint {
+    font-family: var(--cond); text-transform: uppercase; letter-spacing: 0.08em;
+    font-size: 0.72rem; color: var(--muted); margin-top: 1rem;
+  }
+  .caption {
+    font-size: 0.98rem; color: #c7beaf; margin-top: 2rem; line-height: 1.85;
+    max-width: 980px; border-top: 1px solid var(--line); padding-top: 1.4rem;
+  }
+  .caption b { color: var(--white); font-family: var(--cond); letter-spacing: 0.06em; }
+</style>
+</head>
+<body>
+<p class="kicker">Figure &nbsp;·&nbsp; Model architecture</p>
+<h1>The architecture of a multi&#8209;layer GNMM</h1>
+<p class="subtitle">Layer indices run 1 → … → L from input to output &nbsp;|&nbsp; click any node to trace its signal path</p>
+
+<div id="canvas-wrap">
+  <canvas id="nn" width="1180" height="700"></canvas>
+</div>
+
+<div class="controls">
+  <span class="ctrl-label">Highlight path from</span>
+  <button onclick="highlight('all')" id="btn-all" class="active">All</button>
+  <button onclick="highlight('x')"  id="btn-x">Inputs xᵢ</button>
+  <button onclick="highlight('L')"  id="btn-L">Layer (1)</button>
+  <button onclick="highlight('one')" id="btn-one">Layer (L−1)</button>
+  <button onclick="highlight('zero')" id="btn-zero">Layer (L), d₁⁽ᴸ⁾</button>
+  <button onclick="highlight('z')" id="btn-z">Random effects zᵢᵀbᵢ</button>
+</div>
+
+<p class="hint">Click a node on the canvas to trace its connections &nbsp;·&nbsp; click an empty area or "All" to reset</p>
+
+<p class="caption">
+<b>FIGURE 1</b>&nbsp; The architecture of a multi-layer GNMM. The output μ<sub>i</sub><sup>b</sup> depends on inputs
+<b>x</b><sub>i</sub>, weights w<sup>(l)</sup>, and biases d<sup>(l)</sup> through a series of nested nonlinear
+activation functions f<sub>a</sub>(·) for layers l = 1, …, L. The linear predictor for the random effects
+<b>z</b><sub>i</sub><sup>T</sup>b<sub>i</sub> is included in the final layer of the network.
+</p>
+
+<script>
+const C = document.getElementById('nn');
+const ctx = C.getContext('2d');
+const W = 1180, H = 700;
+
+// Render at native device-pixel resolution so the canvas stays sharp on
+// high-DPI (retina) displays instead of being upscaled and blurred.
+const DPR = window.devicePixelRatio || 1;
+C.width = W * DPR;
+C.height = H * DPR;
+C.style.width = W + 'px';
+C.style.height = H + 'px';
+ctx.scale(DPR, DPR);
+
+const CL = '#c8102e', CZ = '#c8102e';
+const NODE_FILL = '#ffffff', NODE_STROKE = '#111111', NODE_STROKE_RED = '#c8102e';
+
+const XI = 90, XL = 300, XONE = 700, XD0 = 900, XZ = 940, XMU = 1090;
+const topY = 90, botY = 500;
+const rowY = [topY, topY + (botY-topY)*0.28, topY + (botY-topY)*0.62, botY];
+// rowY: [unit1, unit2, dots-row, last-unit]
+const dotsRowIdx = 2;
+
+const d0Y = topY + (botY - topY) * 0.42;
+const zY = 40;
+const muY = d0Y;
+
+let selected = 'all';
+
+function setBtn(id) {
+  document.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-'+id)?.classList.add('active');
+}
+function highlight(mode) { selected = mode; setBtn(mode); draw(); }
+
+function edgeAlpha(group) {
+  if (selected === 'all') return 0.55;
+  if (selected === 'x')    return group === 'x-L' ? 0.9 : 0.06;
+  if (selected === 'L')    return (group === 'x-L' || group === 'L-one') ? 0.75 : 0.06;
+  if (selected === 'one')  return (group === 'L-one' || group === 'one-d0') ? 0.8 : 0.06;
+  if (selected === 'zero') return (group === 'one-d0' || group === 'd0-mu') ? 0.85 : 0.06;
+  if (selected === 'z')    return group === 'z-mu' ? 0.95 : 0.06;
+  return 0.5;
+}
+function nodeAlpha(type) {
+  if (selected === 'all') return 1;
+  if (selected === 'x')    return type==='x' || type==='L' ? 0.95 : 0.18;
+  if (selected === 'L')    return type==='x' || type==='L' || type==='one' ? 0.9 : 0.18;
+  if (selected === 'one')  return type==='L' || type==='one' || type==='d0' ? 0.9 : 0.18;
+  if (selected === 'zero') return type==='one' || type==='d0' || type==='mu' ? 0.95 : 0.18;
+  if (selected === 'z')    return type==='z' || type==='mu' ? 1 : 0.18;
+  return 1;
+}
+
+function line(x1,y1,x2,y2,col,lw,alpha) {
+  ctx.save(); ctx.globalAlpha=alpha; ctx.strokeStyle=col; ctx.lineWidth=lw;
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); ctx.restore();
+}
+function arrow(x1,y1,x2,y2,col,lw,alpha) {
+  ctx.save(); ctx.globalAlpha=alpha; ctx.strokeStyle=col; ctx.fillStyle=col; ctx.lineWidth=lw;
+  const angle = Math.atan2(y2-y1, x2-x1);
+  const len = Math.hypot(x2-x1, y2-y1);
+  const ex = x1 + (len-12)*Math.cos(angle), ey = y1 + (len-12)*Math.sin(angle);
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(ex,ey); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x2,y2);
+  ctx.lineTo(x2-11*Math.cos(angle-0.32), y2-11*Math.sin(angle-0.32));
+  ctx.lineTo(x2-11*Math.cos(angle+0.32), y2-11*Math.sin(angle+0.32));
+  ctx.closePath(); ctx.fill(); ctx.restore();
+}
+function circle(x,y,r,alpha,stroke) {
+  ctx.save(); ctx.globalAlpha=alpha;
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2);
+  ctx.fillStyle = NODE_FILL; ctx.fill();
+  ctx.strokeStyle = stroke || NODE_STROKE; ctx.lineWidth = stroke ? 2 : 1.4; ctx.stroke();
+  ctx.restore();
+}
+function text(str, x, y, font, col, align='center', alpha=1) {
+  ctx.save(); ctx.globalAlpha=alpha; ctx.fillStyle=col; ctx.font=font;
+  ctx.textAlign=align; ctx.textBaseline='middle'; ctx.fillText(str, x, y);
+  ctx.restore();
+}
+// point at fraction t along the (x1,y1)-(x2,y2) edge, nudged perpendicular by `perp`
+// so the label sits just off the line rather than on top of it.
+function edgeLabelPos(x1, y1, x2, y2, t, perp) {
+  const mx = x1 + (x2 - x1) * t, my = y1 + (y2 - y1) * t;
+  const angle = Math.atan2(y2 - y1, x2 - x1);
+  return { x: mx - Math.sin(angle) * perp, y: my + Math.cos(angle) * perp };
+}
+
+const NODES = [];
+
+function draw() {
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,W,H);
+  NODES.length = 0;
+
+  // ---- edges: inputs -> layer (L) ----
+  rowY.forEach((iy, i) => {
+    rowY.forEach((hy, h) => {
+      line(XI+34, iy, XL-13, hy, '#333', 0.6, edgeAlpha('x-L'));
+    });
+  });
+  // sample weight labels, anchored to the specific edges they name (w_{target,source}, matching
+  // the matrix convention a^(l) = f_a(W^(l) a^(l-1) + d^(l)), row = target unit, col = source unit):
+  // w11: x1 -> d1   w12: x2 -> d1   w22: x2 -> d2   w1p: xp -> d1   wk1,p: xp -> dK1 (last unit)
+  {
+    const wa = selected==='all'||selected==='L' ? 0.9 : 0.1;
+    const p11 = edgeLabelPos(XI+34, rowY[0], XL-13, rowY[0], 0.5, -13);
+    text('w₁₁⁽¹⁾', p11.x, p11.y, '13px sans-serif', '#333', 'center', wa);
+    const p12 = edgeLabelPos(XI+34, rowY[1], XL-13, rowY[0], 0.68, 12);
+    text('w₁₂⁽¹⁾', p12.x, p12.y, '13px sans-serif', '#333', 'center', wa);
+    const p22 = edgeLabelPos(XI+34, rowY[1], XL-13, rowY[1], 0.5, -13);
+    text('w₂₂⁽¹⁾', p22.x, p22.y, '13px sans-serif', '#333', 'center', wa);
+    const p1p = edgeLabelPos(XI+34, rowY[3], XL-13, rowY[0], 0.62, 14);
+    text('w₁ₚ⁽¹⁾', p1p.x, p1p.y, '13px sans-serif', '#333', 'center', wa);
+    const pkp = edgeLabelPos(XI+34, rowY[3], XL-13, rowY[3], 0.5, 15);
+    text('wₖ₁ₚ⁽¹⁾', pkp.x, pkp.y, '13px sans-serif', '#333', 'center', wa);
+  }
+
+  // ---- edges: layer (L) -> layer (1), drawn as a compressed "..." passage ----
+  rowY.forEach((hy1) => {
+    rowY.forEach((hy2) => {
+      line(XL+13, hy1, XONE-13, hy2, '#333', 0.5, edgeAlpha('L-one')*0.6);
+    });
+  });
+  [rowY[0]-6, rowY[1]+4, rowY[dotsRowIdx]+2].forEach((y) => {
+    text('⋯', (XL+XONE)/2, y, '26px sans-serif', '#888', 'center', selected==='all'?0.8:(edgeAlpha('L-one')>0.5?0.9:0.15));
+  });
+
+  // ---- edges: layer (1) -> d1(L) ----
+  rowY.forEach((hy) => {
+    line(XONE+13, hy, XD0-15, d0Y, '#333', 0.7, edgeAlpha('one-d0'));
+  });
+  // w11: d1(L-1) -> d1(L)   w12: d2(L-1) -> d1(L)   w1k: d_k(L-1) -> d1(L) (single target, "1", always first)
+  {
+    const wa = selected==='all'||selected==='one'||selected==='zero' ? 0.9 : 0.1;
+    const q11 = edgeLabelPos(XONE+13, rowY[0], XD0-15, d0Y, 0.32, -12);
+    text('w₁₁⁽ᴸ⁾', q11.x, q11.y, '13px sans-serif', '#333', 'center', wa);
+    const q12 = edgeLabelPos(XONE+13, rowY[1], XD0-15, d0Y, 0.32, -12);
+    text('w₁₂⁽ᴸ⁾', q12.x, q12.y, '13px sans-serif', '#333', 'center', wa);
+    const q1k = edgeLabelPos(XONE+13, rowY[3], XD0-15, d0Y, 0.34, -12);
+    ctx.save();
+    ctx.translate(q1k.x, q1k.y);
+    ctx.rotate(Math.atan2(d0Y-rowY[3], (XD0-15)-(XONE+13)));
+    ctx.globalAlpha = wa;
+    ctx.font = '12.5px sans-serif'; ctx.fillStyle = '#333'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('w₁ₖ⁽ᴸ⁾', 0, 0);
+    ctx.restore();
+  }
+
+  // ---- d1(L) -> μi ----
+  arrow(XD0+15, d0Y, XMU-30, muY, CL, 1.6, edgeAlpha('d0-mu'));
+
+  // ---- zi^T bi -> μi, labeled fa(.) ----
+  arrow(XZ-8, zY+14, XMU-14, muY-16, CZ, 1.6, edgeAlpha('z-mu'));
+  text('fₐ( · )', (XZ+XMU)/2 + 6, (zY+muY)/2 - 10, 'italic 14px sans-serif', '#c8102e', 'center', selected==='all'||selected==='z'?0.9:0.15);
+
+  // ---- input labels (plain text, no circles) ----
+  const xLabels = ['xᵢ₁', 'xᵢ₂', '⋮', 'xᵢₚ'];
+  rowY.forEach((y, i) => {
+    const a = nodeAlpha('x');
+    text(xLabels[i], XI, y, i===dotsRowIdx ? '20px sans-serif' : '19px italic sans-serif', '#111', 'right', a);
+    NODES.push({x:XI-10, y, r:22, type:'x', idx:i});
+  });
+
+  // ---- layer (1) nodes, first hidden layer nearest the input ----
+  rowY.forEach((y, i) => {
+    const a = nodeAlpha('L');
+    circle(XL, y, 15, a);
+    const lbl = i===dotsRowIdx ? '⋮' : (i===3 ? 'dₖ₁⁽¹⁾' : `d${i+1}⁽¹⁾`);
+    text(lbl, XL, y, i===dotsRowIdx ? '16px sans-serif' : '10.5px sans-serif', '#111', 'center', a);
+    NODES.push({x:XL, y, r:15, type:'L', idx:i});
+  });
+  text('αᵢ⁽¹⁾ = fₐ(w⁽¹⁾xᵢ+d⁽¹⁾)', XL, topY-58, '14.5px sans-serif', '#111', 'center', 0.95);
+
+  // ---- layer (L-1) nodes, last hidden layer nearest the output ----
+  rowY.forEach((y, i) => {
+    const a = nodeAlpha('one');
+    circle(XONE, y, 15, a);
+    const lbl = i===dotsRowIdx ? '⋮' : (i===3 ? 'dₖ⁽ᴸ⁻¹⁾' : `d${i+1}⁽ᴸ⁻¹⁾`);
+    text(lbl, XONE, y, i===dotsRowIdx ? '16px sans-serif' : '9.5px sans-serif', '#111', 'center', a);
+    NODES.push({x:XONE, y, r:15, type:'one', idx:i});
+  });
+  text('αᵢ⁽ᴸ⁻¹⁾ = fₐ(w⁽ᴸ⁻¹⁾αᵢ⁽ᴸ⁻²⁾+d⁽ᴸ⁻¹⁾)', XONE, topY-58, '13.5px sans-serif', '#111', 'center', 0.95);
+
+  // ---- d1(L) node: final layer, pre-activation linear predictor ----
+  {
+    const a = nodeAlpha('d0');
+    circle(XD0, d0Y, 15, a, NODE_STROKE_RED);
+    text('d₁⁽ᴸ⁾', XD0, d0Y, '10.5px sans-serif', '#111', 'center', a);
+    NODES.push({x:XD0, y:d0Y, r:15, type:'d0', idx:0});
+  }
+
+  // ---- zi^T bi label ----
+  {
+    const a = nodeAlpha('z');
+    text('zᵢᵀbᵢ', XZ, zY, 'bold 17px sans-serif', '#c8102e', 'center', a);
+    NODES.push({x:XZ, y:zY, r:24, type:'z', idx:0});
+  }
+
+  // ---- mu_i output label ----
+  {
+    const a = nodeAlpha('mu');
+    text('μᵢ', XMU, muY, 'bold 19px sans-serif', '#c8102e', 'left', a);
+    NODES.push({x:XMU-14, y:muY, r:22, type:'mu', idx:0});
+  }
+
+  // ---- notation key, in the clear margin below the diagram ----
+  {
+    const legendX = 20, legendTop = botY + 34, lineH = 20.5;
+    text('Notation', legendX, legendTop, 'bold 14px sans-serif', '#111', 'left', 1);
+    const entries = [
+      ['xᵢ', 'input features'],
+      ['dᵢ⁽ˡ⁾', 'hidden unit i, layer l'],
+      ['w⁽ˡ⁾, d⁽ˡ⁾', 'weights and biases, layer l'],
+      ['fₐ( · )', 'nonlinear activation function'],
+      ['zᵢᵀbᵢ', 'random effects linear predictor'],
+      ['μᵢ', 'model output'],
+    ];
+    entries.forEach(([sym, desc], i) => {
+      const y = legendTop + lineH * (i + 1);
+      text(sym, legendX, y, '12.5px sans-serif', i>=4 ? '#c8102e' : '#333', 'left', 1);
+      text(desc, legendX + 92, y, '12.5px sans-serif', '#555', 'left', 1);
+    });
+  }
+
+  // ---- final-layer callout, filling the clear space right of mu_i ----
+  {
+    const bx = 900, by = 340, bw = 260, bh = 150;
+    ctx.save();
+    ctx.fillStyle = 'rgba(200,16,46,0.045)';
+    ctx.strokeStyle = 'rgba(200,16,46,0.35)'; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 6); ctx.fill(); ctx.stroke();
+    ctx.restore();
+    text('FINAL LAYER  (l = L)', bx + 16, by + 26, 'bold 11.5px sans-serif', '#c8102e', 'left', 1);
+    text('d₁⁽ᴸ⁾ = w⁽ᴸ⁾αᵢ⁽ᴸ⁻¹⁾ + d⁽ᴸ⁾', bx + 16, by + 58, '13.5px sans-serif', '#333', 'left', 1);
+    text('μᵢ = fₐ( d₁⁽ᴸ⁾ + zᵢᵀbᵢ )', bx + 16, by + 88, 'bold 14.5px sans-serif', '#111', 'left', 1);
+    text('random effects enter the linear', bx + 16, by + 116, '11px sans-serif', '#777', 'left', 1);
+    text('predictor before applying fₐ( · )', bx + 16, by + 132, '11px sans-serif', '#777', 'left', 1);
+  }
+}
+
+C.addEventListener('click', e => {
+  const rect = C.getBoundingClientRect();
+  const scaleX = W / rect.width, scaleY = H / rect.height;
+  const mx = (e.clientX - rect.left) * scaleX;
+  const my = (e.clientY - rect.top)  * scaleY;
+  let hit = null;
+  for (const n of NODES) {
+    if (Math.hypot(mx - n.x, my - n.y) <= n.r + 6) { hit = n; break; }
+  }
+  if (!hit) { highlight('all'); return; }
+  const map = {x:'x', L:'L', one:'one', d0:'zero', z:'z', mu:'zero'};
+  highlight(map[hit.type] || 'all');
+});
+
+draw();
+</script>
+</body>
+</html>
