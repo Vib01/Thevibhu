@@ -94,7 +94,7 @@
   <button onclick="highlight('x')"  id="btn-x">Inputs xᵢ</button>
   <button onclick="highlight('L')"  id="btn-L">Layer (1)</button>
   <button onclick="highlight('one')" id="btn-one">Layer (L)</button>
-  <button onclick="highlight('zero')" id="btn-zero">Linear predictor, d₁</button>
+  <button onclick="highlight('zero')" id="btn-zero">Linear predictor, δ₁</button>
   <button onclick="highlight('z')" id="btn-z">Random effects zᵢᵀbᵢ</button>
 </div>
 
@@ -165,6 +165,14 @@ function line(x1,y1,x2,y2,col,lw,alpha) {
   ctx.save(); ctx.globalAlpha=alpha; ctx.strokeStyle=col; ctx.lineWidth=lw;
   ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); ctx.restore();
 }
+// like line(), but leaves a gap between x = gx1 and x = gx2 (interpolating y at each
+// break point) so the stroke visibly disconnects instead of passing behind the "..." dots.
+function gapLine(x1,y1,x2,y2,col,lw,alpha,gx1,gx2) {
+  const t1 = (gx1-x1)/(x2-x1), t2 = (gx2-x1)/(x2-x1);
+  const gy1 = y1 + (y2-y1)*t1, gy2 = y1 + (y2-y1)*t2;
+  line(x1,y1,gx1,gy1,col,lw,alpha);
+  line(gx2,gy2,x2,y2,col,lw,alpha);
+}
 function arrow(x1,y1,x2,y2,col,lw,alpha) {
   ctx.save(); ctx.globalAlpha=alpha; ctx.strokeStyle=col; ctx.fillStyle=col; ctx.lineWidth=lw;
   const angle = Math.atan2(y2-y1, x2-x1);
@@ -206,13 +214,15 @@ function draw() {
 
   // ---- edges: inputs -> layer (1) ----
   rowY.forEach((iy, i) => {
+    if (i === dotsRowIdx) return;
     rowY.forEach((hy, h) => {
+      if (h === dotsRowIdx) return;
       line(XI+34, iy, XL-13, hy, '#333', 0.6, edgeAlpha('x-L'));
     });
   });
   // sample weight labels, anchored to the specific edges they name (w_{target,source}, matching
-  // the matrix convention a^(l) = f_a(W^(l) a^(l-1) + d^(l)), row = target unit, col = source unit):
-  // w11: x1 -> d1   w12: x2 -> d1   w22: x2 -> d2   w1p: xp -> d1   wk1,p: xp -> dK1 (last unit)
+  // the matrix convention a^(l) = f_a(W^(l) a^(l-1) + δ^(l)), row = target unit, col = source unit):
+  // w11: x1 -> δ1   w12: x2 -> δ1   w22: x2 -> δ2   w1p: xp -> δ1   wk1,p: xp -> δK1 (last unit)
   {
     const wa = selected==='all'||selected==='L' ? 0.9 : 0.1;
     const p11 = edgeLabelPos(XI+34, rowY[0], XL-13, rowY[0], 0.5, -13);
@@ -228,9 +238,14 @@ function draw() {
   }
 
   // ---- edges: layer (1) -> layer (L), drawn as a compressed "..." passage ----
-  rowY.forEach((hy1) => {
-    rowY.forEach((hy2) => {
-      line(XL+13, hy1, XONE-13, hy2, '#333', 0.5, edgeAlpha('L-one')*0.6);
+  // lines break with a visible gap around the midpoint (where the "..." dots sit),
+  // rather than running continuously underneath them, matching the reference figure.
+  const midGapX1 = (XL+XONE)/2 - 45, midGapX2 = (XL+XONE)/2 + 45;
+  rowY.forEach((hy1, i1) => {
+    if (i1 === dotsRowIdx) return;
+    rowY.forEach((hy2, i2) => {
+      if (i2 === dotsRowIdx) return;
+      gapLine(XL+13, hy1, XONE-13, hy2, '#333', 0.5, edgeAlpha('L-one')*0.9, midGapX1, midGapX2);
     });
   });
   [rowY[0]-6, rowY[1]+4, rowY[dotsRowIdx]+2].forEach((y) => {
@@ -238,24 +253,25 @@ function draw() {
   });
 
   // ---- edges: layer (L) -> d1 (final linear predictor) ----
-  rowY.forEach((hy) => {
+  rowY.forEach((hy, i) => {
+    if (i === dotsRowIdx) return;
     line(XONE+13, hy, XD0-15, d0Y, '#333', 0.7, edgeAlpha('one-d0'));
   });
-  // weights from layer L into the single linear-predictor node d1 (target is always d1,
-  // so only the source index is shown): w1(L): d1(L)->d1   w2(L): d2(L)->d1   wk(L): dk(L)->d1
+  // weights from layer L into the single linear-predictor node δ1(0) (target is always δ1(0),
+  // so only the source index is shown): w1(L): δ1(L)->δ1(0)   w2(L): δ2(L)->δ1(0)   wk(L): δk(L)->δ1(0)
   {
     const wa = selected==='all'||selected==='one'||selected==='zero' ? 0.9 : 0.1;
     const q11 = edgeLabelPos(XONE+13, rowY[0], XD0-15, d0Y, 0.32, -12);
-    text('w₁⁽ᴸ⁾', q11.x, q11.y, '15px sans-serif', '#333', 'center', wa);
+    text('w₁ᴸ', q11.x, q11.y, '15px sans-serif', '#333', 'center', wa);
     const q12 = edgeLabelPos(XONE+13, rowY[1], XD0-15, d0Y, 0.32, -12);
-    text('w₂⁽ᴸ⁾', q12.x, q12.y, '15px sans-serif', '#333', 'center', wa);
+    text('w₂ᴸ', q12.x, q12.y, '15px sans-serif', '#333', 'center', wa);
     const q1k = edgeLabelPos(XONE+13, rowY[3], XD0-15, d0Y, 0.34, -12);
     ctx.save();
     ctx.translate(q1k.x, q1k.y);
     ctx.rotate(Math.atan2(d0Y-rowY[3], (XD0-15)-(XONE+13)));
     ctx.globalAlpha = wa;
     ctx.font = '15px sans-serif'; ctx.fillStyle = '#333'; ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.fillText('wₖ⁽ᴸ⁾', 0, 0);
+    ctx.fillText('wₖᴸ', 0, 0);
     ctx.restore();
   }
 
@@ -277,30 +293,38 @@ function draw() {
   // ---- layer (1) nodes, first hidden layer nearest the input ----
   rowY.forEach((y, i) => {
     const a = nodeAlpha('L');
+    if (i===dotsRowIdx) {
+      text('⋮', XL, y, '16px sans-serif', '#111', 'center', a);
+      return;
+    }
     circle(XL, y, 15, a);
-    const lbl = i===dotsRowIdx ? '⋮' : (i===3 ? 'dₖ₁⁽¹⁾' : `d${i+1}⁽¹⁾`);
-    const fnt = i===dotsRowIdx ? '16px sans-serif' : (i===3 ? '12.5px sans-serif' : '10.5px sans-serif');
+    const lbl = i===3 ? 'δₖ₁⁽¹⁾' : `δ${i+1}⁽¹⁾`;
+    const fnt = i===3 ? '12.5px sans-serif' : '10.5px sans-serif';
     text(lbl, XL, y, fnt, '#111', 'center', a);
     NODES.push({x:XL, y, r:15, type:'L', idx:i});
   });
-  text('αᵢ⁽¹⁾ = fₐ(w⁽¹⁾xᵢ+d⁽¹⁾)', XL, topY-58, '14.5px sans-serif', '#111', 'center', 0.95);
+  text('αᵢ⁽¹⁾ = fₐ(w⁽¹⁾xᵢ+δ⁽¹⁾)', XL, topY-58, '14.5px sans-serif', '#111', 'center', 0.95);
 
   // ---- layer (L) nodes, last hidden layer nearest the output ----
   rowY.forEach((y, i) => {
     const a = nodeAlpha('one');
+    if (i===dotsRowIdx) {
+      text('⋮', XONE, y, '16px sans-serif', '#111', 'center', a);
+      return;
+    }
     circle(XONE, y, 15, a);
-    const lbl = i===dotsRowIdx ? '⋮' : (i===3 ? 'dₖ⁽ᴸ⁾' : `d${i+1}⁽ᴸ⁾`);
-    const fnt = i===dotsRowIdx ? '16px sans-serif' : (i===3 ? '11.5px sans-serif' : '9.5px sans-serif');
+    const lbl = i===3 ? 'δₖᴸ' : `δ${i+1}ᴸ`;
+    const fnt = i===3 ? '11.5px sans-serif' : '9.5px sans-serif';
     text(lbl, XONE, y, fnt, '#111', 'center', a);
     NODES.push({x:XONE, y, r:15, type:'one', idx:i});
   });
-  text('αᵢ⁽ᴸ⁾ = fₐ(w⁽ᴸ⁾αᵢ⁽ᴸ⁻¹⁾+d⁽ᴸ⁾)', XONE, topY-58, '13.5px sans-serif', '#111', 'center', 0.95);
+  text('αᵢ⁽ᴸ⁾ = fₐ(w⁽ᴸ⁾αᵢ⁽ᴸ⁻¹⁾+δ⁽ᴸ⁾)', XONE, topY-58, '13.5px sans-serif', '#111', 'center', 0.95);
 
   // ---- d1 node: linear predictor, combines layer L's output ahead of fa(.) and the random effects ----
   {
     const a = nodeAlpha('d0');
     circle(XD0, d0Y, 15, a, NODE_STROKE_RED);
-    text('d₁', XD0, d0Y, '11px sans-serif', '#111', 'center', a);
+    text('δ₁', XD0, d0Y, '11px sans-serif', '#111', 'center', a);
     NODES.push({x:XD0, y:d0Y, r:15, type:'d0', idx:0});
   }
 
@@ -324,9 +348,9 @@ function draw() {
     text('Notation', legendX, legendTop, 'bold 14px sans-serif', '#111', 'left', 1);
     const entries = [
       ['xᵢ', 'input features'],
-      ['dᵢ⁽ˡ⁾', 'hidden unit i, layer l'],
-      ['w⁽ˡ⁾, d⁽ˡ⁾', 'weights and biases, layer l'],
-      ['d₁', 'final linear predictor (pre-activation)'],
+      ['δᵢ⁽ˡ⁾', 'hidden unit i, layer l'],
+      ['w⁽ˡ⁾, δ⁽ˡ⁾', 'weights and biases, layer l'],
+      ['δ₁', 'final linear predictor (pre-activation)'],
       ['fₐ( · )', 'nonlinear activation function'],
       ['zᵢᵀbᵢ', 'random effects linear predictor'],
       ['μᵢ', 'model output'],
