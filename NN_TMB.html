@@ -173,6 +173,13 @@ function gapLine(x1,y1,x2,y2,col,lw,alpha,gx1,gx2) {
   line(x1,y1,gx1,gy1,col,lw,alpha);
   line(gx2,gy2,x2,y2,col,lw,alpha);
 }
+// like gapLine(), but the second (post-gap) segment ends in an arrowhead.
+function gapArrow(x1,y1,x2,y2,col,lw,alpha,gx1,gx2) {
+  const t1 = (gx1-x1)/(x2-x1), t2 = (gx2-x1)/(x2-x1);
+  const gy1 = y1 + (y2-y1)*t1, gy2 = y1 + (y2-y1)*t2;
+  line(x1,y1,gx1,gy1,col,lw,alpha);
+  arrow(gx2,gy2,x2,y2,col,lw,alpha);
+}
 function arrow(x1,y1,x2,y2,col,lw,alpha) {
   ctx.save(); ctx.globalAlpha=alpha; ctx.strokeStyle=col; ctx.fillStyle=col; ctx.lineWidth=lw;
   const angle = Math.atan2(y2-y1, x2-x1);
@@ -217,7 +224,7 @@ function draw() {
     if (i === dotsRowIdx) return;
     rowY.forEach((hy, h) => {
       if (h === dotsRowIdx) return;
-      line(XI+34, iy, XL-13, hy, '#333', 0.6, edgeAlpha('x-L'));
+      arrow(XI+34, iy, XL-13, hy, '#333', 0.6, edgeAlpha('x-L'));
     });
   });
   // sample weight labels, anchored to the specific edges they name (w_{target,source}, matching
@@ -245,7 +252,7 @@ function draw() {
     if (i1 === dotsRowIdx) return;
     rowY.forEach((hy2, i2) => {
       if (i2 === dotsRowIdx) return;
-      gapLine(XL+13, hy1, XONE-13, hy2, '#333', 0.5, edgeAlpha('L-one')*0.9, midGapX1, midGapX2);
+      gapArrow(XL+13, hy1, XONE-13, hy2, '#333', 0.5, edgeAlpha('L-one')*0.9, midGapX1, midGapX2);
     });
   });
   [rowY[0]-6, rowY[1]+4, rowY[dotsRowIdx]+2].forEach((y) => {
@@ -255,7 +262,7 @@ function draw() {
   // ---- edges: layer (L) -> d1 (final linear predictor) ----
   rowY.forEach((hy, i) => {
     if (i === dotsRowIdx) return;
-    line(XONE+13, hy, XD0-15, d0Y, '#333', 0.7, edgeAlpha('one-d0'));
+    arrow(XONE+13, hy, XD0-15, d0Y, '#333', 0.7, edgeAlpha('one-d0'));
   });
   // weights from layer L into the single linear-predictor node δ1(0) (target is always δ1(0),
   // so only the source index is shown): w1(L): δ1(L)->δ1(0)   w2(L): δ2(L)->δ1(0)   wk(L): δk(L)->δ1(0)
