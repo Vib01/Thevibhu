@@ -213,6 +213,7 @@ function edgeLabelPos(x1, y1, x2, y2, t, perp) {
 }
 
 const NODES = [];
+const SUB_DIGIT = ['₁', '₂']; // subscript 1, 2 — for unit-index labels (i=0 -> unit 1, i=1 -> unit 2)
 
 function draw() {
   ctx.clearRect(0,0,W,H);
@@ -305,7 +306,7 @@ function draw() {
       return;
     }
     circle(XL, y, 15, a);
-    const lbl = i===3 ? 'δₖ₁⁽¹⁾' : `δ${i+1}⁽¹⁾`;
+    const lbl = i===3 ? 'δₖ₁⁽¹⁾' : `δ${SUB_DIGIT[i]}⁽¹⁾`;
     const fnt = i===3 ? '12.5px sans-serif' : '10.5px sans-serif';
     text(lbl, XL, y, fnt, '#111', 'center', a);
     NODES.push({x:XL, y, r:15, type:'L', idx:i});
@@ -320,7 +321,7 @@ function draw() {
       return;
     }
     circle(XONE, y, 15, a);
-    const lbl = i===3 ? 'δₖᴸ' : `δ${i+1}ᴸ`;
+    const lbl = i===3 ? 'δₖᴸ' : `δ${SUB_DIGIT[i]}ᴸ`;
     const fnt = i===3 ? '11.5px sans-serif' : '9.5px sans-serif';
     text(lbl, XONE, y, fnt, '#111', 'center', a);
     NODES.push({x:XONE, y, r:15, type:'one', idx:i});
