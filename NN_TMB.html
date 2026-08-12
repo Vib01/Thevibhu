@@ -22,7 +22,7 @@
     background: radial-gradient(circle at 15% 0%, #17181c 0%, var(--black) 55%);
   }
   body {
-    margin: 0 auto; max-width: 1260px;
+    margin: 0 auto; max-width: 1680px;
     padding: 2.4rem clamp(1.2rem, 4vw, 3rem) 3rem;
     font-family: var(--body);
     color: var(--white);
@@ -43,7 +43,7 @@
   #canvas-wrap {
     position: relative; background: #fbfaf7; border: 1px solid rgba(0,0,0,0.08);
     border-radius: 4px; padding: 1.1rem 1.1rem 0.6rem; overflow: hidden;
-    max-width: 1220px;
+    max-width: 1600px;
     box-shadow: 0 30px 60px rgba(0,0,0,0.45);
   }
   #canvas-wrap::before {
@@ -110,16 +110,21 @@ activation functions f<sub>a</sub>(·) for layers l = 1, …, L. The linear pred
 <script>
 const C = document.getElementById('nn');
 const ctx = C.getContext('2d');
+// W, H stay the logical drawing coordinate space that every position/size below is
+// expressed in. SCALE enlarges the rendered output (nodes, edges, text) uniformly for
+// readability, independent of that coordinate space.
 const W = 1180, H = 700;
+const SCALE = 1.3;
+const DISPLAY_W = Math.round(W * SCALE), DISPLAY_H = Math.round(H * SCALE);
 
 // Render at native device-pixel resolution so the canvas stays sharp on
 // high-DPI (retina) displays instead of being upscaled and blurred.
 const DPR = window.devicePixelRatio || 1;
-C.width = W * DPR;
-C.height = H * DPR;
-C.style.width = W + 'px';
-C.style.height = H + 'px';
-ctx.scale(DPR, DPR);
+C.width = DISPLAY_W * DPR;
+C.height = DISPLAY_H * DPR;
+C.style.width = DISPLAY_W + 'px';
+C.style.height = DISPLAY_H + 'px';
+ctx.scale(DPR * SCALE, DPR * SCALE);
 
 const CL = '#c8102e', CZ = '#c8102e';
 const NODE_FILL = '#ffffff', NODE_STROKE = '#111111', NODE_STROKE_RED = '#c8102e';
