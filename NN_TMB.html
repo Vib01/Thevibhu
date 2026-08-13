@@ -209,12 +209,25 @@ function text(str, x, y, font, col, align='center', alpha=1) {
   ctx.textAlign=align; ctx.textBaseline='middle'; ctx.fillText(str, x, y);
   ctx.restore();
 }
-// point at fraction t along the (x1,y1)-(x2,y2) edge, nudged perpendicular by `perp`
-// so the label sits just off the line rather than on top of it.
-function edgeLabelPos(x1, y1, x2, y2, t, perp) {
+// draws str directly on top of the (x1,y1)-(x2,y2) edge at fraction t, rotated to the
+// edge's own angle and set on a white patch that breaks the line underneath — so the
+// label sits inline with its edge instead of floating near several crossing lines,
+// making unambiguous which edge it names.
+function lineLabel(x1, y1, x2, y2, t, str, font, col, alpha) {
   const mx = x1 + (x2 - x1) * t, my = y1 + (y2 - y1) * t;
   const angle = Math.atan2(y2 - y1, x2 - x1);
-  return { x: mx - Math.sin(angle) * perp, y: my + Math.cos(angle) * perp };
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.translate(mx, my);
+  ctx.rotate(angle);
+  ctx.font = font;
+  const w = ctx.measureText(str).width;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(-w/2 - 3, -9, w + 6, 18);
+  ctx.fillStyle = col;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(str, 0, 0);
+  ctx.restore();
 }
 
 const NODES = [];
@@ -238,16 +251,11 @@ function draw() {
   // w11: x1 -> δ1   w12: x2 -> δ1   w22: x2 -> δ2   w1p: xp -> δ1   wk1,p: xp -> δK1 (last unit)
   {
     const wa = selected==='all'||selected==='L' ? 0.9 : 0.1;
-    const p11 = edgeLabelPos(XI+34, rowY[0], XL-13, rowY[0], 0.5, -13);
-    text('w₁₁⁽¹⁾', p11.x, p11.y, '15px sans-serif', '#333', 'center', wa);
-    const p12 = edgeLabelPos(XI+34, rowY[1], XL-13, rowY[0], 0.68, 12);
-    text('w₁₂⁽¹⁾', p12.x, p12.y, '15px sans-serif', '#333', 'center', wa);
-    const p22 = edgeLabelPos(XI+34, rowY[1], XL-13, rowY[1], 0.5, -13);
-    text('w₂₂⁽¹⁾', p22.x, p22.y, '15px sans-serif', '#333', 'center', wa);
-    const p1p = edgeLabelPos(XI+34, rowY[3], XL-13, rowY[0], 0.62, 14);
-    text('wₚ₁⁽¹⁾', p1p.x, p1p.y, '15px sans-serif', '#333', 'center', wa);
-    const pkp = edgeLabelPos(XI+34, rowY[3], XL-13, rowY[3], 0.5, 15);
-    text('wₖₚ₁⁽¹⁾', pkp.x, pkp.y, '15px sans-serif', '#333', 'center', wa);
+    lineLabel(XI+34, rowY[0], XL-13, rowY[0], 0.5, 'w₁₁⁽¹⁾', '15px sans-serif', '#333', wa);
+    lineLabel(XI+34, rowY[1], XL-13, rowY[0], 0.5, 'w₁₂⁽¹⁾', '15px sans-serif', '#333', wa);
+    lineLabel(XI+34, rowY[1], XL-13, rowY[1], 0.5, 'w₂₂⁽¹⁾', '15px sans-serif', '#333', wa);
+    lineLabel(XI+34, rowY[3], XL-13, rowY[0], 0.5, 'wₚ₁⁽¹⁾', '15px sans-serif', '#333', wa);
+    lineLabel(XI+34, rowY[3], XL-13, rowY[3], 0.5, 'wₖₚ₁⁽¹⁾', '15px sans-serif', '#333', wa);
   }
 
   // ---- edges: layer (1) -> layer (L), drawn as a compressed "..." passage ----
@@ -274,18 +282,9 @@ function draw() {
   // so only the source index is shown): w1(L): δ1(L)->δ1(0)   w2(L): δ2(L)->δ1(0)   wk(L): δk(L)->δ1(0)
   {
     const wa = selected==='all'||selected==='one'||selected==='zero' ? 0.9 : 0.1;
-    const q11 = edgeLabelPos(XONE+13, rowY[0], XD0-15, d0Y, 0.32, -12);
-    text('w₁ᴸ', q11.x, q11.y, '15px sans-serif', '#333', 'center', wa);
-    const q12 = edgeLabelPos(XONE+13, rowY[1], XD0-15, d0Y, 0.32, -12);
-    text('w₂ᴸ', q12.x, q12.y, '15px sans-serif', '#333', 'center', wa);
-    const q1k = edgeLabelPos(XONE+13, rowY[3], XD0-15, d0Y, 0.34, -12);
-    ctx.save();
-    ctx.translate(q1k.x, q1k.y);
-    ctx.rotate(Math.atan2(d0Y-rowY[3], (XD0-15)-(XONE+13)));
-    ctx.globalAlpha = wa;
-    ctx.font = '15px sans-serif'; ctx.fillStyle = '#333'; ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.fillText('wₖᴸ', 0, 0);
-    ctx.restore();
+    lineLabel(XONE+13, rowY[0], XD0-15, d0Y, 0.5, 'w₁⁽ᴸ⁾', '15px sans-serif', '#333', wa);
+    lineLabel(XONE+13, rowY[1], XD0-15, d0Y, 0.5, 'w₂⁽ᴸ⁾', '15px sans-serif', '#333', wa);
+    lineLabel(XONE+13, rowY[3], XD0-15, d0Y, 0.5, 'wₖ⁽ᴸ⁾', '15px sans-serif', '#333', wa);
   }
 
   // ---- d1 -> μi ----
@@ -326,8 +325,8 @@ function draw() {
       return;
     }
     circle(XONE, y, 15, a);
-    const lbl = i===3 ? 'δₖᴸ' : `δ${SUB_DIGIT[i]}ᴸ`;
-    const fnt = i===3 ? '11.5px sans-serif' : '9.5px sans-serif';
+    const lbl = i===3 ? 'δₖ⁽ᴸ⁾' : `δ${SUB_DIGIT[i]}⁽ᴸ⁾`;
+    const fnt = i===3 ? '10.5px sans-serif' : '9px sans-serif';
     text(lbl, XONE, y, fnt, '#111', 'center', a);
     NODES.push({x:XONE, y, r:15, type:'one', idx:i});
   });
@@ -337,7 +336,7 @@ function draw() {
   {
     const a = nodeAlpha('d0');
     circle(XD0, d0Y, 15, a, NODE_STROKE_RED);
-    text('δ₁', XD0, d0Y, '11px sans-serif', '#111', 'center', a);
+    text('δ₁⁽⁰⁾', XD0, d0Y, '9px sans-serif', '#111', 'center', a);
     NODES.push({x:XD0, y:d0Y, r:15, type:'d0', idx:0});
   }
 
