@@ -22,7 +22,7 @@
     background: radial-gradient(circle at 15% 0%, #17181c 0%, var(--black) 55%);
   }
   body {
-    margin: 0 auto; max-width: 1680px;
+    margin: 0 auto; max-width: 1950px;
     padding: 2.4rem clamp(1.2rem, 4vw, 3rem) 3rem;
     font-family: var(--body);
     color: var(--white);
@@ -43,7 +43,7 @@
   #canvas-wrap {
     position: relative; background: #fbfaf7; border: 1px solid rgba(0,0,0,0.08);
     border-radius: 4px; padding: 1.1rem 1.1rem 0.6rem; overflow: hidden;
-    max-width: 1600px;
+    max-width: 1870px;
     box-shadow: 0 30px 60px rgba(0,0,0,0.45);
   }
   #canvas-wrap::before {
@@ -85,7 +85,7 @@
 <p class="subtitle">Layer indices run 1 → … → L from input to output &nbsp;|&nbsp; click any node to trace its signal path</p>
 
 <div id="canvas-wrap">
-  <canvas id="nn" width="1180" height="700"></canvas>
+  <canvas id="nn" width="1300" height="700"></canvas>
 </div>
 
 <div class="controls">
@@ -103,7 +103,7 @@
 <p class="caption">
 <b>FIGURE </b>&nbsp; The architecture of a multi-layer GNMM. The output μ<sub>i</sub><sup>b</sup> depends on inputs
 <b>x</b><sub>i</sub>, weights w<sup>(l)</sup>, and biases d<sup>(l)</sup> through a series of nested nonlinear
-activation functions f<sub>a</sub>(·) for layers l = 1, …, L. The linear predictor for the random effects
+activation functions g(·) for layers l = 1, …, L. The linear predictor for the random effects
 <b>z</b><sub>i</sub><sup>T</sup>b<sub>i</sub> is included in the final layer of the network.
 </p>
 
@@ -113,23 +113,31 @@ const ctx = C.getContext('2d');
 // W, H stay the logical drawing coordinate space that every position/size below is
 // expressed in. SCALE enlarges the rendered output (nodes, edges, text) uniformly for
 // readability, independent of that coordinate space.
-const W = 1180, H = 700;
-const SCALE = 1.3;
+// W is wider than H to echo the reference figure's banner shape, but kept modest —
+// pushing DISPLAY_W past a typical browser window forces the CSS max-width:100% cap to
+// shrink the whole canvas back down to fit, which shrinks all the text with it and was
+// making everything illegible.
+const W = 1300, H = 700;
+const SCALE = 1.4;
 const DISPLAY_W = Math.round(W * SCALE), DISPLAY_H = Math.round(H * SCALE);
 
 // Render at native device-pixel resolution so the canvas stays sharp on
-// high-DPI (retina) displays instead of being upscaled and blurred.
+// high-DPI (retina) displays instead of being upscaled and blurred. PRINT_SCALE adds
+// extra backing-store resolution on top of that, independent of the screen's own pixel
+// ratio, so a right-click "save image" still holds up at print/paper size instead of
+// blurring when scaled beyond typical screen resolution.
 const DPR = window.devicePixelRatio || 1;
-C.width = DISPLAY_W * DPR;
-C.height = DISPLAY_H * DPR;
+const PRINT_SCALE = 3;
+C.width = DISPLAY_W * DPR * PRINT_SCALE;
+C.height = DISPLAY_H * DPR * PRINT_SCALE;
 C.style.width = DISPLAY_W + 'px';
 C.style.height = DISPLAY_H + 'px';
-ctx.scale(DPR * SCALE, DPR * SCALE);
+ctx.scale(DPR * SCALE * PRINT_SCALE, DPR * SCALE * PRINT_SCALE);
 
 const CL = '#c8102e', CZ = '#c8102e';
 const NODE_FILL = '#ffffff', NODE_STROKE = '#111111', NODE_STROKE_RED = '#c8102e';
 
-const XI = 90, XL = 300, XONE = 700, XD0 = 900, XZ = 940, XMU = 1090;
+const XI = 99, XL = 330, XONE = 771, XD0 = 991, XZ = 1036, XMU = 1201;
 const topY = 90, botY = 500;
 const rowY = [topY, topY + (botY-topY)*0.28, topY + (botY-topY)*0.62, botY];
 // rowY: [unit1, unit2, dots-row, last-unit]
@@ -209,29 +217,125 @@ function text(str, x, y, font, col, align='center', alpha=1) {
   ctx.textAlign=align; ctx.textBaseline='middle'; ctx.fillText(str, x, y);
   ctx.restore();
 }
-// draws str directly on top of the (x1,y1)-(x2,y2) edge at fraction t, rotated to the
-// edge's own angle and set on a white patch that breaks the line underneath — so the
-// label sits inline with its edge instead of floating near several crossing lines,
-// making unambiguous which edge it names.
-function lineLabel(x1, y1, x2, y2, t, str, font, col, alpha) {
+// draws main (e.g. 'δ' or 'w') at (x,y) with subStr and supStr both anchored to the same
+// x right after it — a true subscript (lower) and superscript (higher, smaller) sharing
+// one attachment point, the way math notation actually pairs them, rather than the
+// superscript trailing after the whole subscript.
+function supSubText(x, y, main, subStr, supStr, mainSize, subSize, supSize, col, alpha) {
+  ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = col; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+  ctx.font = `${mainSize}px sans-serif`; const mW = ctx.measureText(main).width;
+  ctx.font = `${subSize}px sans-serif`; const subW = ctx.measureText(subStr).width;
+  ctx.font = `${supSize}px sans-serif`; const supW = ctx.measureText(supStr).width;
+  const totalW = mW + Math.max(subW, supW);
+  const startX = x - totalW / 2;
+  const gx = startX + mW;
+  ctx.font = `${mainSize}px sans-serif`;
+  ctx.fillText(main, startX, y);
+  ctx.font = `${subSize}px sans-serif`;
+  ctx.fillText(subStr, gx, y + mainSize * 0.28);
+  ctx.font = `${supSize}px sans-serif`;
+  ctx.fillText(supStr, gx - 2, y - mainSize * 0.32);
+  ctx.restore();
+}
+// draws δ_{k1}^{(sup)} centered at (x,y): the "1" is a nested subscript of k (unit k_1),
+// not a same-size second subscript digit — same fragment-by-fragment approach as wpk1Label,
+// just laid out horizontally (not rotated) since node labels aren't drawn on an edge.
+function dK1Text(x, y, sup, baseSize, subSize, subSubSize, supSize, col, alpha) {
+  ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = col; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+  ctx.font = `${baseSize}px sans-serif`; const dW = ctx.measureText('δ').width;
+  ctx.font = `${subSize}px sans-serif`; const kW = ctx.measureText('k').width;
+  ctx.font = `${subSubSize}px sans-serif`; const oneW = ctx.measureText('1').width;
+  ctx.font = `${supSize}px sans-serif`; const supW = ctx.measureText(sup).width;
+  // sub (k, nested 1) and sup share the same starting x right after δ, like a real
+  // superscript/subscript pair, rather than the sup trailing after the whole subscript.
+  const subGroupW = kW + oneW;
+  const totalW = dW + Math.max(subGroupW, supW);
+  const startX = x - totalW / 2;
+  const gx = startX + dW;
+
+  ctx.font = `${baseSize}px sans-serif`;
+  ctx.fillText('δ', startX, y);
+  ctx.font = `${supSize}px sans-serif`;
+  ctx.fillText(sup, gx - 2, y - baseSize * 0.32);
+  ctx.font = `${subSize}px sans-serif`;
+  ctx.fillText('k', gx, y + baseSize * 0.28);
+  ctx.font = `${subSubSize}px sans-serif`;
+  ctx.fillText('1', gx + kW, y + baseSize * 0.28 + subSize * 0.4);
+  ctx.restore();
+}
+// like supSubText, but drawn on a rotated edge with a white patch breaking the line
+// underneath, like lineLabel — for w_{ij}^{(l)}-style edge labels.
+function supSubLineLabel(x1, y1, x2, y2, t, main, subStr, supStr, mainSize, subSize, supSize, col, alpha) {
   const mx = x1 + (x2 - x1) * t, my = y1 + (y2 - y1) * t;
   const angle = Math.atan2(y2 - y1, x2 - x1);
   ctx.save();
   ctx.globalAlpha = alpha;
   ctx.translate(mx, my);
   ctx.rotate(angle);
-  ctx.font = font;
-  const w = ctx.measureText(str).width;
+  ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+  ctx.font = `${mainSize}px sans-serif`; const mW = ctx.measureText(main).width;
+  ctx.font = `${subSize}px sans-serif`; const subW = ctx.measureText(subStr).width;
+  ctx.font = `${supSize}px sans-serif`; const supW = ctx.measureText(supStr).width;
+  const totalW = mW + Math.max(subW, supW);
+  const startX = -totalW / 2;
+  const gx = startX + mW;
+  const padY = mainSize * 0.55;
   ctx.fillStyle = '#ffffff';
-  ctx.fillRect(-w/2 - 3, -9, w + 6, 18);
+  ctx.fillRect(startX - mainSize * 0.15, -padY, totalW + mainSize * 0.3, padY * 2);
   ctx.fillStyle = col;
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText(str, 0, 0);
+  ctx.font = `${mainSize}px sans-serif`;
+  ctx.fillText(main, startX, 0);
+  ctx.font = `${subSize}px sans-serif`;
+  ctx.fillText(subStr, gx, mainSize * 0.28);
+  ctx.font = `${supSize}px sans-serif`;
+  ctx.fillText(supStr, gx - 2, -mainSize * 0.32);
+  ctx.restore();
+}
+// like lineLabel, but for w_{p,k1}^{(1)} specifically: the "1" in "k1" is a subscript of k
+// itself (unit k_1), not a third same-size subscript digit — unicode subscripts can't nest,
+// so this draws each fragment at its own size/baseline instead of one flat string.
+function wpk1Label(x1, y1, x2, y2, t, col, alpha) {
+  const mx = x1 + (x2 - x1) * t, my = y1 + (y2 - y1) * t;
+  const angle = Math.atan2(y2 - y1, x2 - x1);
+  const baseFont = 31, subFont = 21, subSubFont = 15, supFont = 21;
+  const subY = 8, oneY = 15, supY = -10;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.translate(mx, my);
+  ctx.rotate(angle);
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'left';
+
+  ctx.font = `${baseFont}px sans-serif`; const wW = ctx.measureText('w').width;
+  ctx.font = `${subFont}px sans-serif`; const pW = ctx.measureText('p').width, kW = ctx.measureText('k').width;
+  ctx.font = `${subSubFont}px sans-serif`; const oneW = ctx.measureText('1').width;
+  ctx.font = `${supFont}px sans-serif`; const supW = ctx.measureText('⁽¹⁾').width;
+  // sub (p, k, nested 1) and sup share the same starting x right after w, like a real
+  // superscript/subscript pair, rather than the sup trailing after the whole subscript.
+  const subGroupW = pW + kW + oneW;
+  const totalW = wW + Math.max(subGroupW, supW);
+  const startX = -totalW / 2;
+
+  const padY = baseFont * 0.55;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(startX - baseFont * 0.15, -padY, totalW + baseFont * 0.3, padY * 2);
+  ctx.fillStyle = col;
+
+  ctx.font = `${baseFont}px sans-serif`;
+  ctx.fillText('w', startX, 0);
+  const gx = startX + wW;
+  ctx.font = `${supFont}px sans-serif`;
+  ctx.fillText('⁽¹⁾', gx - 2, supY);
+  ctx.font = `${subFont}px sans-serif`;
+  ctx.fillText('p', gx, subY);
+  ctx.fillText('k', gx + pW, subY);
+  ctx.font = `${subSubFont}px sans-serif`;
+  ctx.fillText('1', gx + pW + kW, oneY);
+
   ctx.restore();
 }
 
 const NODES = [];
-const SUB_DIGIT = ['₁', '₂']; // subscript 1, 2 — for unit-index labels (i=0 -> unit 1, i=1 -> unit 2)
 
 function draw() {
   ctx.clearRect(0,0,W,H);
@@ -243,7 +347,7 @@ function draw() {
     if (i === dotsRowIdx) return;
     rowY.forEach((hy, h) => {
       if (h === dotsRowIdx) return;
-      arrow(XI+34, iy, XL-13, hy, '#333', 0.6, edgeAlpha('x-L'));
+      arrow(XI+34, iy, XL-29, hy, '#333', 1.65, edgeAlpha('x-L'));
     });
   });
   // sample weight labels, anchored to the specific edges they name (w_{target,source}, matching
@@ -251,112 +355,107 @@ function draw() {
   // w11: x1 -> δ1   w12: x2 -> δ1   w22: x2 -> δ2   w1p: xp -> δ1   wk1,p: xp -> δK1 (last unit)
   {
     const wa = selected==='all'||selected==='L' ? 0.9 : 0.1;
-    lineLabel(XI+34, rowY[0], XL-13, rowY[0], 0.5, 'w₁₁⁽¹⁾', '15px sans-serif', '#333', wa);
-    lineLabel(XI+34, rowY[1], XL-13, rowY[0], 0.5, 'w₁₂⁽¹⁾', '15px sans-serif', '#333', wa);
-    lineLabel(XI+34, rowY[1], XL-13, rowY[1], 0.5, 'w₂₂⁽¹⁾', '15px sans-serif', '#333', wa);
-    lineLabel(XI+34, rowY[3], XL-13, rowY[0], 0.5, 'wₚ₁⁽¹⁾', '15px sans-serif', '#333', wa);
-    lineLabel(XI+34, rowY[3], XL-13, rowY[3], 0.5, 'wₖₚ₁⁽¹⁾', '15px sans-serif', '#333', wa);
+    supSubLineLabel(XI+34, rowY[0], XL-29, rowY[0], 0.5, 'w', '11', '⁽¹⁾', 31, 21, 21, '#333', wa);
+    supSubLineLabel(XI+34, rowY[1], XL-29, rowY[0], 0.5, 'w', '12', '⁽¹⁾', 31, 21, 21, '#333', wa);
+    supSubLineLabel(XI+34, rowY[1], XL-29, rowY[1], 0.5, 'w', '22', '⁽¹⁾', 31, 21, 21, '#333', wa);
+    supSubLineLabel(XI+34, rowY[3], XL-29, rowY[0], 0.5, 'w', 'p1', '⁽¹⁾', 31, 21, 21, '#333', wa);
+    wpk1Label(XI+34, rowY[3], XL-29, rowY[3], 0.5, '#333', wa);
   }
 
   // ---- edges: layer (1) -> layer (L), drawn as a compressed "..." passage ----
   // lines break with a visible gap around the midpoint (where the "..." dots sit),
   // rather than running continuously underneath them, matching the reference figure.
-  const midGapX1 = (XL+XONE)/2 - 45, midGapX2 = (XL+XONE)/2 + 45;
+  const midGapX1 = (XL+XONE)/2 - 55, midGapX2 = (XL+XONE)/2 + 55;
   rowY.forEach((hy1, i1) => {
     if (i1 === dotsRowIdx) return;
     rowY.forEach((hy2, i2) => {
       if (i2 === dotsRowIdx) return;
-      gapArrow(XL+13, hy1, XONE-13, hy2, '#333', 0.5, edgeAlpha('L-one')*0.9, midGapX1, midGapX2);
+      gapArrow(XL+29, hy1, XONE-29, hy2, '#333', 1.3, edgeAlpha('L-one')*0.9, midGapX1, midGapX2);
     });
   });
   [rowY[0]-6, rowY[1]+4, rowY[dotsRowIdx]+2].forEach((y) => {
-    text('⋯', (XL+XONE)/2, y, '26px sans-serif', '#888', 'center', selected==='all'?0.8:(edgeAlpha('L-one')>0.5?0.9:0.15));
+    text('⋯', (XL+XONE)/2, y, '50px sans-serif', '#888', 'center', selected==='all'?0.8:(edgeAlpha('L-one')>0.5?0.9:0.15));
   });
 
   // ---- edges: layer (L) -> d1 (final linear predictor) ----
   rowY.forEach((hy, i) => {
     if (i === dotsRowIdx) return;
-    arrow(XONE+13, hy, XD0-15, d0Y, '#333', 0.7, edgeAlpha('one-d0'));
+    arrow(XONE+29, hy, XD0-31, d0Y, '#333', 1.65, edgeAlpha('one-d0'));
   });
-  // weights from layer L into the single linear-predictor node δ1(0) (target is always δ1(0),
-  // so only the source index is shown): w1(L): δ1(L)->δ1(0)   w2(L): δ2(L)->δ1(0)   wk(L): δk(L)->δ1(0)
-  {
-    const wa = selected==='all'||selected==='one'||selected==='zero' ? 0.9 : 0.1;
-    lineLabel(XONE+13, rowY[0], XD0-15, d0Y, 0.5, 'w₁⁽ᴸ⁾', '15px sans-serif', '#333', wa);
-    lineLabel(XONE+13, rowY[1], XD0-15, d0Y, 0.5, 'w₂⁽ᴸ⁾', '15px sans-serif', '#333', wa);
-    lineLabel(XONE+13, rowY[3], XD0-15, d0Y, 0.5, 'wₖ⁽ᴸ⁾', '15px sans-serif', '#333', wa);
-  }
-
   // ---- d1 -> μi ----
-  arrow(XD0+15, d0Y, XMU-30, muY, CL, 1.6, edgeAlpha('d0-mu'));
+  arrow(XD0+31, d0Y, XMU-30, muY, CL, 2.6, edgeAlpha('d0-mu'));
 
   // ---- zi^T bi -> μi, labeled fa(.) ----
-  arrow(XZ-8, zY+14, XMU-14, muY-16, CZ, 1.6, edgeAlpha('z-mu'));
-  text('fₐ( · )', (XZ+XMU)/2 + 6, (zY+muY)/2 - 10, 'italic 14px sans-serif', '#c8102e', 'center', selected==='all'||selected==='z'?0.9:0.15);
+  arrow(XZ-13, zY+23, XMU-23, muY-26, CZ, 2.6, edgeAlpha('z-mu'));
+  text('g( · )', (XZ+XMU)/2 + 20, (zY+muY)/2 - 10, 'italic 28px sans-serif', '#c8102e', 'center', selected==='all'||selected==='z'?0.9:0.15);
 
   // ---- input labels (plain text, no circles) ----
   const xLabels = ['xᵢ₁', 'xᵢ₂', '⋮', 'xᵢₚ'];
   rowY.forEach((y, i) => {
     const a = nodeAlpha('x');
-    text(xLabels[i], XI, y, i===dotsRowIdx ? '20px sans-serif' : '19px italic sans-serif', '#111', 'right', a);
-    NODES.push({x:XI-10, y, r:22, type:'x', idx:i});
+    text(xLabels[i], XI, y, i===dotsRowIdx ? '38px sans-serif' : '36px italic sans-serif', '#111', 'right', a);
+    NODES.push({x:XI-10, y, r:36, type:'x', idx:i});
   });
 
   // ---- layer (1) nodes, first hidden layer nearest the input ----
   rowY.forEach((y, i) => {
     const a = nodeAlpha('L');
     if (i===dotsRowIdx) {
-      text('⋮', XL, y, '16px sans-serif', '#111', 'center', a);
+      text('⋮', XL, y, '30px sans-serif', '#111', 'center', a);
       return;
     }
-    circle(XL, y, 15, a);
-    const lbl = i===3 ? 'δₖ₁⁽¹⁾' : `δ${SUB_DIGIT[i]}⁽¹⁾`;
-    const fnt = i===3 ? '12.5px sans-serif' : '10.5px sans-serif';
-    text(lbl, XL, y, fnt, '#111', 'center', a);
-    NODES.push({x:XL, y, r:15, type:'L', idx:i});
+    circle(XL, y, 31, a);
+    if (i===3) {
+      dK1Text(XL, y, '⁽¹⁾', 26, 19, 14, 24, '#111', a);
+    } else {
+      supSubText(XL, y, 'δ', String(i+1), '⁽¹⁾', 28, 21, 24, '#111', a);
+    }
+    NODES.push({x:XL, y, r:31, type:'L', idx:i});
   });
-  text('αᵢ⁽¹⁾ = fₐ(w⁽¹⁾xᵢ+δ⁽¹⁾)', XL, topY-58, '14.5px sans-serif', '#111', 'center', 0.95);
+  text('αᵢ⁽¹⁾ = fₐ(w⁽¹⁾xᵢ+δ⁽¹⁾)', XL, topY-58, '28px sans-serif', '#111', 'center', 0.95);
 
   // ---- layer (L) nodes, last hidden layer nearest the output ----
   rowY.forEach((y, i) => {
     const a = nodeAlpha('one');
     if (i===dotsRowIdx) {
-      text('⋮', XONE, y, '16px sans-serif', '#111', 'center', a);
+      text('⋮', XONE, y, '30px sans-serif', '#111', 'center', a);
       return;
     }
-    circle(XONE, y, 15, a);
-    const lbl = i===3 ? 'δₖ⁽ᴸ⁾' : `δ${SUB_DIGIT[i]}⁽ᴸ⁾`;
-    const fnt = i===3 ? '10.5px sans-serif' : '9px sans-serif';
-    text(lbl, XONE, y, fnt, '#111', 'center', a);
-    NODES.push({x:XONE, y, r:15, type:'one', idx:i});
+    circle(XONE, y, 31, a);
+    if (i===3) {
+      supSubText(XONE, y, 'δ', 'k', '⁽ᴸ⁾', 27, 21, 25, '#111', a);
+    } else {
+      supSubText(XONE, y, 'δ', String(i+1), '⁽ᴸ⁾', 29, 21, 25, '#111', a);
+    }
+    NODES.push({x:XONE, y, r:31, type:'one', idx:i});
   });
-  text('αᵢ⁽ᴸ⁾ = fₐ(w⁽ᴸ⁾αᵢ⁽ᴸ⁻¹⁾+δ⁽ᴸ⁾)', XONE, topY-58, '13.5px sans-serif', '#111', 'center', 0.95);
+  text('αᵢ⁽ᴸ⁾ = fₐ(w⁽ᴸ⁾αᵢ⁽ᴸ⁻¹⁾+δ⁽ᴸ⁾)', XONE, topY-58, '26px sans-serif', '#111', 'center', 0.95);
 
   // ---- d1 node: linear predictor, combines layer L's output ahead of fa(.) and the random effects ----
   {
     const a = nodeAlpha('d0');
-    circle(XD0, d0Y, 15, a, NODE_STROKE_RED);
-    text('δ₁', XD0, d0Y, '9px sans-serif', '#111', 'center', a);
-    NODES.push({x:XD0, y:d0Y, r:15, type:'d0', idx:0});
+    circle(XD0, d0Y, 31, a, NODE_STROKE_RED);
+    text('δ', XD0, d0Y, '28px sans-serif', '#111', 'center', a);
+    NODES.push({x:XD0, y:d0Y, r:31, type:'d0', idx:0});
   }
 
   // ---- zi^T bi label ----
   {
     const a = nodeAlpha('z');
-    text('zᵢᵀbᵢ', XZ, zY, 'bold 17px sans-serif', '#c8102e', 'center', a);
-    NODES.push({x:XZ, y:zY, r:24, type:'z', idx:0});
+    text('zᵢᵀbᵢ', XZ, zY, 'bold 33px sans-serif', '#c8102e', 'center', a);
+    NODES.push({x:XZ, y:zY, r:40, type:'z', idx:0});
   }
 
   // ---- mu_i output label ----
   {
     const a = nodeAlpha('mu');
-    text('μᵢ', XMU, muY, 'bold 19px sans-serif', '#c8102e', 'left', a);
-    NODES.push({x:XMU-14, y:muY, r:22, type:'mu', idx:0});
+    text('μᵢ', XMU, muY, 'bold 36px sans-serif', '#c8102e', 'left', a);
+    NODES.push({x:XMU-14, y:muY, r:36, type:'mu', idx:0});
   }
 
   // ---- notation key, in the clear margin below the diagram ----
   {
-    const legendX = 20, legendTop = botY + 34, lineH = 20.5;
+    const legendX = 20, legendTop = botY + 42, lineH = 20.5;
     text('Notation', legendX, legendTop, 'bold 14px sans-serif', '#111', 'left', 1);
     const entries = [
       ['xᵢ', 'input features'],
