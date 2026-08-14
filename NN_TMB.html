@@ -237,18 +237,19 @@ function supSubText(x, y, main, subStr, supStr, mainSize, subSize, supSize, col,
   ctx.fillText(supStr, gx - 2, y - mainSize * 0.32);
   ctx.restore();
 }
-// draws δ_{k1}^{(sup)} centered at (x,y): the "1" is a nested subscript of k (unit k_1),
-// not a same-size second subscript digit — same fragment-by-fragment approach as wpk1Label,
-// just laid out horizontally (not rotated) since node labels aren't drawn on an edge.
-function dK1Text(x, y, sup, baseSize, subSize, subSubSize, supSize, col, alpha) {
+// draws δ_{k·nested}^{(sup)} centered at (x,y): nested (e.g. "1" or "L") is a nested
+// subscript of k (unit k_1, k_L, …), not a same-size second subscript character — same
+// fragment-by-fragment approach as wpk1Label, just laid out horizontally (not rotated)
+// since node labels aren't drawn on an edge.
+function dK1Text(x, y, nested, sup, baseSize, subSize, subSubSize, supSize, col, alpha) {
   ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = col; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
   ctx.font = `${baseSize}px sans-serif`; const dW = ctx.measureText('δ').width;
   ctx.font = `${subSize}px sans-serif`; const kW = ctx.measureText('k').width;
-  ctx.font = `${subSubSize}px sans-serif`; const oneW = ctx.measureText('1').width;
+  ctx.font = `${subSubSize}px sans-serif`; const nestedW = ctx.measureText(nested).width;
   ctx.font = `${supSize}px sans-serif`; const supW = ctx.measureText(sup).width;
-  // sub (k, nested 1) and sup share the same starting x right after δ, like a real
+  // sub (k, nested) and sup share the same starting x right after δ, like a real
   // superscript/subscript pair, rather than the sup trailing after the whole subscript.
-  const subGroupW = kW + oneW;
+  const subGroupW = kW + nestedW;
   const totalW = dW + Math.max(subGroupW, supW);
   const startX = x - totalW / 2;
   const gx = startX + dW;
@@ -260,7 +261,7 @@ function dK1Text(x, y, sup, baseSize, subSize, subSubSize, supSize, col, alpha) 
   ctx.font = `${subSize}px sans-serif`;
   ctx.fillText('k', gx, y + baseSize * 0.28);
   ctx.font = `${subSubSize}px sans-serif`;
-  ctx.fillText('1', gx + kW, y + baseSize * 0.28 + subSize * 0.4);
+  ctx.fillText(nested, gx + kW, y + baseSize * 0.28 + subSize * 0.4);
   ctx.restore();
 }
 // like supSubText, but drawn on a rotated edge with a white patch breaking the line
@@ -406,7 +407,7 @@ function draw() {
     }
     circle(XL, y, 31, a);
     if (i===3) {
-      dK1Text(XL, y, '⁽¹⁾', 26, 19, 14, 24, '#111', a);
+      dK1Text(XL, y, '1', '⁽¹⁾', 26, 19, 14, 24, '#111', a);
     } else {
       supSubText(XL, y, 'δ', String(i+1), '⁽¹⁾', 28, 21, 24, '#111', a);
     }
@@ -423,7 +424,7 @@ function draw() {
     }
     circle(XONE, y, 31, a);
     if (i===3) {
-      supSubText(XONE, y, 'δ', 'k', '⁽ᴸ⁾', 27, 21, 25, '#111', a);
+      dK1Text(XONE, y, 'L', '⁽ᴸ⁾', 27, 21, 15, 25, '#111', a);
     } else {
       supSubText(XONE, y, 'δ', String(i+1), '⁽ᴸ⁾', 29, 21, 25, '#111', a);
     }
