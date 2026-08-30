@@ -237,19 +237,19 @@ function supSubText(x, y, main, subStr, supStr, mainSize, subSize, supSize, col,
   ctx.fillText(supStr, gx - 2, y - mainSize * 0.32);
   ctx.restore();
 }
-// draws δ_{k·nested}^{(sup)} centered at (x,y): nested (e.g. "1" or "L") is a nested
-// subscript of k (unit k_1, k_L, …), not a same-size second subscript character — same
+// draws δ_{d·nested}^{(sup)} centered at (x,y): nested (e.g. "1" or "L") is a nested
+// subscript of d (unit d_1, d_L, …), not a same-size second subscript character — same
 // fragment-by-fragment approach as wpk1Label, just laid out horizontally (not rotated)
 // since node labels aren't drawn on an edge.
 function dK1Text(x, y, nested, sup, baseSize, subSize, subSubSize, supSize, col, alpha) {
   ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = col; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
   ctx.font = `${baseSize}px sans-serif`; const dW = ctx.measureText('δ').width;
-  ctx.font = `${subSize}px sans-serif`; const kW = ctx.measureText('k').width;
+  ctx.font = `${subSize}px sans-serif`; const dSubW = ctx.measureText('d').width;
   ctx.font = `${subSubSize}px sans-serif`; const nestedW = ctx.measureText(nested).width;
   ctx.font = `${supSize}px sans-serif`; const supW = ctx.measureText(sup).width;
-  // sub (k, nested) and sup share the same starting x right after δ, like a real
+  // sub (d, nested) and sup share the same starting x right after δ, like a real
   // superscript/subscript pair, rather than the sup trailing after the whole subscript.
-  const subGroupW = kW + nestedW;
+  const subGroupW = dSubW + nestedW;
   const totalW = dW + Math.max(subGroupW, supW);
   const startX = x - totalW / 2;
   const gx = startX + dW;
@@ -259,9 +259,9 @@ function dK1Text(x, y, nested, sup, baseSize, subSize, subSubSize, supSize, col,
   ctx.font = `${supSize}px sans-serif`;
   ctx.fillText(sup, gx - 2, y - baseSize * 0.32);
   ctx.font = `${subSize}px sans-serif`;
-  ctx.fillText('k', gx, y + baseSize * 0.28);
+  ctx.fillText('d', gx, y + baseSize * 0.28);
   ctx.font = `${subSubSize}px sans-serif`;
-  ctx.fillText(nested, gx + kW, y + baseSize * 0.28 + subSize * 0.4);
+  ctx.fillText(nested, gx + dSubW, y + baseSize * 0.28 + subSize * 0.4);
   ctx.restore();
 }
 // like supSubText, but drawn on a rotated edge with a white patch breaking the line
@@ -292,8 +292,8 @@ function supSubLineLabel(x1, y1, x2, y2, t, main, subStr, supStr, mainSize, subS
   ctx.fillText(supStr, gx - 2, -mainSize * 0.32);
   ctx.restore();
 }
-// like lineLabel, but for w_{p,k1}^{(1)} specifically: the "1" in "k1" is a subscript of k
-// itself (unit k_1), not a third same-size subscript digit — unicode subscripts can't nest,
+// like lineLabel, but for w_{p,d1}^{(1)} specifically: the "1" in "d1" is a subscript of d
+// itself (unit d_1), not a third same-size subscript digit — unicode subscripts can't nest,
 // so this draws each fragment at its own size/baseline instead of one flat string.
 function wpk1Label(x1, y1, x2, y2, t, col, alpha) {
   const mx = x1 + (x2 - x1) * t, my = y1 + (y2 - y1) * t;
@@ -308,12 +308,12 @@ function wpk1Label(x1, y1, x2, y2, t, col, alpha) {
   ctx.textAlign = 'left';
 
   ctx.font = `${baseFont}px sans-serif`; const wW = ctx.measureText('w').width;
-  ctx.font = `${subFont}px sans-serif`; const pW = ctx.measureText('p').width, kW = ctx.measureText('k').width;
+  ctx.font = `${subFont}px sans-serif`; const pW = ctx.measureText('p').width, dSubW = ctx.measureText('d').width;
   ctx.font = `${subSubFont}px sans-serif`; const oneW = ctx.measureText('1').width;
   ctx.font = `${supFont}px sans-serif`; const supW = ctx.measureText('⁽¹⁾').width;
-  // sub (p, k, nested 1) and sup share the same starting x right after w, like a real
+  // sub (p, d, nested 1) and sup share the same starting x right after w, like a real
   // superscript/subscript pair, rather than the sup trailing after the whole subscript.
-  const subGroupW = pW + kW + oneW;
+  const subGroupW = pW + dSubW + oneW;
   const totalW = wW + Math.max(subGroupW, supW);
   const startX = -totalW / 2;
 
@@ -329,9 +329,9 @@ function wpk1Label(x1, y1, x2, y2, t, col, alpha) {
   ctx.fillText('⁽¹⁾', gx - 2, supY);
   ctx.font = `${subFont}px sans-serif`;
   ctx.fillText('p', gx, subY);
-  ctx.fillText('k', gx + pW, subY);
+  ctx.fillText('d', gx + pW, subY);
   ctx.font = `${subSubFont}px sans-serif`;
-  ctx.fillText('1', gx + pW + kW, oneY);
+  ctx.fillText('1', gx + pW + dSubW, oneY);
 
   ctx.restore();
 }
@@ -353,7 +353,7 @@ function draw() {
   });
   // sample weight labels, anchored to the specific edges they name (w_{target,source}, matching
   // the matrix convention a^(l) = f_a(W^(l) a^(l-1) + δ^(l)), row = target unit, col = source unit):
-  // w11: x1 -> δ1   w12: x2 -> δ1   w22: x2 -> δ2   w1p: xp -> δ1   wk1,p: xp -> δK1 (last unit)
+  // w11: x1 -> δ1   w12: x2 -> δ1   w22: x2 -> δ2   w1p: xp -> δ1   wd1,p: xp -> δD1 (last unit)
   {
     const wa = selected==='all'||selected==='L' ? 0.9 : 0.1;
     supSubLineLabel(XI+34, rowY[0], XL-29, rowY[0], 0.5, 'w', '11', '⁽¹⁾', 31, 21, 21, '#333', wa);
