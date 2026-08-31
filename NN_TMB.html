@@ -335,6 +335,40 @@ function wpk1Label(x1, y1, x2, y2, t, col, alpha) {
 
   ctx.restore();
 }
+// like supSubLineLabel, but for w_{d,L} specifically: "L" is a nested subscript of d
+// (unit d_L), not a flat two-character subscript, and there's no superscript since this
+// edge feeds the (unlabeled-by-layer) final linear predictor rather than a layer output.
+function wdLLineLabel(x1, y1, x2, y2, t, col, alpha) {
+  const mx = x1 + (x2 - x1) * t, my = y1 + (y2 - y1) * t;
+  const angle = Math.atan2(y2 - y1, x2 - x1);
+  const mainSize = 31, subSize = 21, subSubSize = 15;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.translate(mx, my);
+  ctx.rotate(angle);
+  ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+
+  ctx.font = `${mainSize}px sans-serif`; const wW = ctx.measureText('w').width;
+  ctx.font = `${subSize}px sans-serif`; const dSubW = ctx.measureText('d').width;
+  ctx.font = `${subSubSize}px sans-serif`; const lW = ctx.measureText('L').width;
+  const totalW = wW + dSubW + lW;
+  const startX = -totalW / 2;
+
+  const padY = mainSize * 0.55;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(startX - mainSize * 0.15, -padY, totalW + mainSize * 0.3, padY * 2);
+  ctx.fillStyle = col;
+
+  ctx.font = `${mainSize}px sans-serif`;
+  ctx.fillText('w', startX, 0);
+  const gx = startX + wW;
+  ctx.font = `${subSize}px sans-serif`;
+  ctx.fillText('d', gx, mainSize * 0.28);
+  ctx.font = `${subSubSize}px sans-serif`;
+  ctx.fillText('L', gx + dSubW, mainSize * 0.28 + subSize * 0.4);
+
+  ctx.restore();
+}
 
 const NODES = [];
 
@@ -383,6 +417,15 @@ function draw() {
     if (i === dotsRowIdx) return;
     arrow(XONE+29, hy, XD0-31, d0Y, '#333', 1.65, edgeAlpha('one-d0'));
   });
+  // weight labels for these edges: single index per source unit (w1, w2, w_dL) — no
+  // target index or layer superscript, since all three converge on the one (unlabeled
+  // by layer) final linear predictor rather than a full weight matrix.
+  {
+    const wa = selected==='all'||selected==='one' ? 0.9 : 0.1;
+    supSubLineLabel(XONE+29, rowY[0], XD0-31, d0Y, 0.5, 'w', '1', '', 31, 21, 21, '#333', wa);
+    supSubLineLabel(XONE+29, rowY[1], XD0-31, d0Y, 0.5, 'w', '2', '', 31, 21, 21, '#333', wa);
+    wdLLineLabel(XONE+29, rowY[3], XD0-31, d0Y, 0.5, '#333', wa);
+  }
   // ---- d1 -> μi ----
   arrow(XD0+31, d0Y, XMU-30, muY, CL, 2.6, edgeAlpha('d0-mu'));
 
