@@ -97,7 +97,11 @@ export default function MaturityExplorer() {
           ) : (
             "arXiv:2608.31133"
           )}
-          .
+          . The chat panel below is grounded in{" "}
+          <a href="https://thevibs.com/NN_TMB.html" target="_blank" rel="noopener" className="underline">
+            an interactive walkthrough of the paper
+          </a>{" "}
+          via retrieval, for plain-language questions about the model itself.
         </p>
       </header>
 

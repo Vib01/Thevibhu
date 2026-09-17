@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { PAPER_CONTEXT } from "./systemPrompt";
+import { retrieveRelevantChunks } from "../../lib/paperRag";
 
 // Azure AI Foundry model deployment (gpt-4.1-mini), called through the
 // OpenAI-compatible /openai/v1 endpoint with a plain API key. See
@@ -16,6 +17,7 @@ function getClient() {
   });
 }
 const DEPLOYMENT = process.env.AZURE_OPENAI_DEPLOYMENT ?? "gpt-4.1-mini";
+const EMBEDDING_DEPLOYMENT = process.env.AZURE_OPENAI_EMBEDDING_DEPLOYMENT ?? "text-embedding-3-small";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -54,11 +56,40 @@ export async function POST(request: Request) {
     return Response.json({ error: "Last message must be from the user" }, { status: 400 });
   }
 
+  if (!process.env.AZURE_OPENAI_ENDPOINT || !process.env.AZURE_OPENAI_API_KEY) {
+    return Response.json(
+      { error: "Server is missing AZURE_OPENAI_ENDPOINT / AZURE_OPENAI_API_KEY configuration." },
+      { status: 500 }
+    );
+  }
+
+  // Retrieve relevant excerpts from the paper's own walkthrough (NN_TMB.html,
+  // arXiv:2608.31133) so conceptual/"explain this" questions are grounded in
+  // the paper's actual explanations, not a generic gloss. This is additive to
+  // -- not a replacement for -- the numeric chart grounding below.
+  let paperExcerpts: { heading: string; text: string }[] = [];
+  try {
+    const embeddingRes = await getClient().embeddings.create({
+      model: EMBEDDING_DEPLOYMENT,
+      input: lastUserMessage.content,
+    });
+    paperExcerpts = retrieveRelevantChunks(embeddingRes.data[0].embedding, 3);
+  } catch {
+    // RAG is a bonus, not a dependency -- if embeddings fail, fall through
+    // and answer from the numeric chart context alone.
+  }
+
   // Ground the model's answer in exactly what's currently plotted, rather
   // than letting it guess at numbers. See systemPrompt.ts rule 3.
   const contextBlock = [
     "Current chart context (JSON) -- the only data you may cite numbers from:",
     JSON.stringify({ cohort, points }, null, 2),
+    ...(paperExcerpts.length > 0
+      ? [
+          "\nRelevant excerpts from the paper's own walkthrough (use these to explain concepts/methodology in plain language; they are not chart data):",
+          ...paperExcerpts.map((c) => `--- ${c.heading} ---\n${c.text}`),
+        ]
+      : []),
   ].join("\n");
 
   const chatMessages: OpenAI.ChatCompletionMessageParam[] = [
@@ -69,13 +100,6 @@ export async function POST(request: Request) {
       content: `${contextBlock}\n\nUser question: ${lastUserMessage.content}`,
     },
   ];
-
-  if (!process.env.AZURE_OPENAI_ENDPOINT || !process.env.AZURE_OPENAI_API_KEY) {
-    return Response.json(
-      { error: "Server is missing AZURE_OPENAI_ENDPOINT / AZURE_OPENAI_API_KEY configuration." },
-      { status: 500 }
-    );
-  }
 
   let stream;
   try {
