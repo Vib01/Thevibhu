@@ -2,3 +2,10 @@
 .env.*
 !.env.example
 node_modules/
+
+# plaice-api: TMB build artifacts (platform-specific, rebuilt by precompute.R)
+plaice-api/model/*.o
+plaice-api/model/*.dll
+plaice-api/model/*.so
+# raw DFO survey data -- confirm redistribution is OK before ever un-ignoring
+plaice-api/model/data_3LNO_50_save

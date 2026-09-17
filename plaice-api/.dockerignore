@@ -1,0 +1,8 @@
+model/*.cpp
+model/*.o
+model/*.dll
+model/*.so
+model/data_3LNO_50_save
+model/precompute.R
+model/prediction_grid.csv
+*.log

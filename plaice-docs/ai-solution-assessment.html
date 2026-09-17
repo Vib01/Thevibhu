@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AI Solution Assessment — Plaice Maturity Explorer</title>
+<style>
+  @page { size: Letter; margin: 0.6in; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+    font-size: 9.5pt;
+    line-height: 1.42;
+    color: #1a1a1a;
+    margin: 0;
+  }
+  header {
+    border-bottom: 2px solid #1a1a2e;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+  }
+  h1 { font-size: 15pt; margin: 0 0 2px 0; color: #1a1a2e; }
+  .subtitle { font-size: 9pt; color: #444; margin: 0; }
+  .meta { font-size: 8pt; color: #666; margin-top: 4px; }
+  .meta span { margin-right: 14px; }
+  h2 {
+    font-size: 9.5pt;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #1a1a2e;
+    border-bottom: 1px solid #ccc;
+    margin: 9px 0 3px 0;
+    padding-bottom: 1px;
+  }
+  p { margin: 2px 0 4px 0; }
+  .grid5 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 14px;
+  }
+  .principle { break-inside: avoid; }
+  .principle .name { font-weight: 600; color: #1a1a2e; }
+  table { width: 100%; border-collapse: collapse; margin: 3px 0; }
+  td, th { text-align: left; padding: 1.5px 6px 1.5px 0; vertical-align: top; font-size: 9.5pt; }
+  th { width: 130px; color: #444; font-weight: 600; }
+  code { background: #f0f0f0; padding: 0 3px; border-radius: 2px; font-size: 8.8pt; }
+  footer {
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top: 1px solid #ccc;
+    font-size: 8pt;
+    color: #666;
+  }
+  a { color: #1a1a2e; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>AI Solution Assessment — Plaice Maturity Explorer</h1>
+  <p class="subtitle">Prepared with reference to the Government of Newfoundland and Labrador OCIO <em>Responsible Use of Artificial Intelligence Technology</em> policy (gov.nl.ca/exec/ocio/ai-policy)</p>
+  <p class="meta"><span><strong>Prepared by:</strong> Vibhu Sharma (vibhus@mun.ca)</span><span><strong>Date:</strong> September 2026</span><span><strong>Status:</strong> Personal portfolio project — not a government submission</span></p>
+</header>
+
+<h2>Purpose &amp; Scope</h2>
+<p>A demonstration decision-support tool that predicts the probability of sexual maturity at age for female American plaice cohorts (NAFO Divisions 3L, 3N, 3O), from the fitted model in Zheng, Cheung, Sharma, Thorson &amp; Cadigan (2026), arXiv:2608.31133. Built to show a responsible-AI-aligned deployment pattern for a published scientific model — plumber API, web front end, and an LLM layer for plain-language interpretation. <strong>This is an educational/portfolio artifact, not an operational stock-assessment or regulatory tool</strong>, and is not deployed for public-facing government use.</p>
+
+<h2>Data Sources &amp; Governance</h2>
+<table>
+  <tr><th>Training data</th><td>DFO/NAFO fisheries survey data underlying the published paper — a public academic dataset, not government-confidential or personal information. No Cabinet records or ATIPPA-scoped personal information are involved; a Privacy Impact Assessment is not applicable.</td></tr>
+  <tr><th>Raw data handling</th><td>The raw survey extract is excluded from the public code repository (<code>.gitignore</code>) pending explicit confirmation of redistribution terms — the deployed API serves only a precomputed prediction grid, not the underlying records.</td></tr>
+</table>
+
+<h2>System Architecture</h2>
+<p>R/TMB neural-network mixed-effects model (fitted offline) &rarr; static prediction grid, precomputed with delta-method confidence intervals &rarr; Plumber (R) API &rarr; Next.js front end &rarr; Azure AI Foundry (<code>gpt-4.1-mini</code>) for a grounded chat layer that interprets results in plain language.</p>
+
+<h2>Alignment with the Five Guiding Principles</h2>
+<div class="grid5">
+  <div class="principle">
+    <p><span class="name">Transparent &amp; Explainable —</span> Every page shows a Model Card disclosing training-data scope, known limitations, and data provenance. The chat layer is instructed to cite the confidence interval alongside any probability it states.</p>
+  </div>
+  <div class="principle">
+    <p><span class="name">Fair &amp; Ethical —</span> The model uses only age and birth cohort of a single fish stock/sex/region; it involves no personal or demographic data about individuals, and its scope is explicitly disclosed to prevent misapplication to other stocks or regions.</p>
+  </div>
+  <div class="principle">
+    <p><span class="name">Private &amp; Secure —</span> No personal or confidential information is processed or stored. API keys are kept server-side, excluded from source control, and no user conversation data is persisted beyond the browser session.</p>
+  </div>
+  <div class="principle">
+    <p><span class="name">Accountable &amp; Responsible —</span> Single named owner (above) accountable for the tool. Outputs are explicitly scoped as exploratory/educational, not a basis for operational or regulatory decisions.</p>
+  </div>
+  <div class="principle">
+    <p><span class="name">Human Oversight —</span> Predictions in statistically non-identifiable regions (e.g., cohorts at the edge of the training window) are algorithmically forced to a maximally uncertain [0%, 100%] interval and flagged, rather than left to look falsely precise. Any AI-generated interpretive text is presented as a gloss to be verified against the chart, not an authoritative source — consistent with the policy's requirement that AI-generated content be validated by a person before use.</p>
+  </div>
+</div>
+
+<h2>Performance Monitoring</h2>
+<p>Offline: the published model's held-out test performance (binary cross-entropy 0.249) is comparable to a standard GLMM baseline (0.250), reported in the source paper. At runtime: the app computes a live uncertainty flag on every query — it auto-highlights when the displayed 95% CI exceeds a fixed width threshold or falls in a non-identifiable region — giving an always-on signal rather than relying solely on a one-time offline metric.</p>
+
+<h2>Hallucination Risk (LLM Layer)</h2>
+<p>The chat layer's system prompt restricts it to numeric claims present in the currently displayed data (it is instructed to say so and ask the user to adjust the chart controls, rather than estimate, when asked about a cohort/age not shown), and mandates stating the confidence interval — and explicitly flagging non-identifiable ones as unreliable — alongside any probability it cites. Residual risk: free-text explanatory content (e.g., biological reasoning about why a cohort matures later) is model-generated and not independently fact-checked, and should be read as a plain-language gloss, not a citable scientific claim.</p>
+
+<h2>Approval Scope</h2>
+<p>Personal/internal demonstration only. Any use beyond this scope — in particular any government or public-facing operational use — would require a formal AI Assessment Process (AIA) submission and Deputy Minister approval under the OCIO policy, which this project has not sought and does not require at its current scope.</p>
+
+<footer>
+  Model &amp; methodology: Zheng, Cheung, Sharma, Thorson &amp; Cadigan (2026), arXiv:2608.31133 &nbsp;•&nbsp; Policy reference: Government of NL OCIO, <em>Responsible Use of Artificial Intelligence Technology</em>, gov.nl.ca/exec/ocio/ai-policy
+</footer>
+
+</body>
+</html>

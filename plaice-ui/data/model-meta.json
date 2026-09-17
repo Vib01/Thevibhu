@@ -1,0 +1,12 @@
+{
+  "cohort_min": 1958,
+  "cohort_max": 2015,
+  "age_min": 0,
+  "age_max": 24,
+  "n_training_records": 78923,
+  "n_cohorts": 58,
+  "sex": "female",
+  "species": "American plaice (Hippoglossoides platessoides)",
+  "stock_area": "NAFO Divisions 3L, 3N, 3O",
+  "reference": "arXiv:2608.31133"
+}
