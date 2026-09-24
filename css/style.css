@@ -1088,6 +1088,36 @@ body.ready .hero-content .reveal {
   transition-duration: 0.9s;
 }
 
+/* performative-ui components (mounted by js/pui.js) */
+.pui-mount {
+  --pui-font-sans: var(--body);
+}
+
+#pui-wordroll .pui-roll__word {
+  color: var(--white);
+  font-weight: 500;
+}
+
+.stack-strip {
+  padding: 3.2rem 0;
+  border-top: 1px solid var(--line-dark);
+  border-bottom: 1px solid var(--line-dark);
+}
+
+.stack-strip .pui-slippy {
+  align-items: center;
+}
+
+.stack-strip .pui-slippy__row {
+  margin: 0;
+}
+
+.stack-strip .pui-slippy__word {
+  color: #c4bbab;
+  border-color: var(--line-dark);
+  background: rgba(255, 255, 255, 0.03);
+}
+
 @media (max-width: 1040px) {
   .teaser-grid {
     grid-template-columns: 1fr 1fr;

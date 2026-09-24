@@ -8,7 +8,19 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,500;1,400&family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/performative-ui@0.7.0/dist/performative-ui.css">
   <link rel="stylesheet" href="css/style.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@19.1.0",
+        "react/jsx-runtime": "https://esm.sh/react@19.1.0/jsx-runtime",
+        "react-dom": "https://esm.sh/react-dom@19.1.0",
+        "react-dom/client": "https://esm.sh/react-dom@19.1.0/client",
+        "performative-ui": "https://esm.sh/performative-ui@0.7.0?external=react,react-dom"
+      }
+    }
+  </script>
 </head>
 <body class="is-loading">
   <div id="loader" class="loader" aria-label="Page loading">
@@ -58,7 +70,7 @@
         <h1 class="reveal delay-1">The <em>Builder</em></h1>
         <h2 class="reveal delay-2">Vibhu Sharma</h2>
         <p class="hero-copy reveal delay-3">
-          Dealing with data, statistics, AI and endurance.
+          Dealing with <span id="pui-wordroll" class="pui-mount" data-words="data|statistics|AI|endurance">data, statistics, AI and endurance</span>.
         </p>
         <div class="hero-actions reveal delay-4">
           <a class="btn btn-solid" href="#chapter-03">Discover Work</a>
@@ -171,6 +183,10 @@
         </p>
         <a class="chapter-link-btn reveal delay-3" href="#chapter-03">Explore</a>
       </div>
+    </section>
+
+    <section class="stack-strip chapter-dark" aria-label="Tools and stack">
+      <div id="pui-slippy" class="pui-mount"></div>
     </section>
 
     <section id="chapter-03" class="section chapter chapter-light">
@@ -312,5 +328,6 @@
   </main>
 
   <script src="js/main.js"></script>
+  <script type="module" src="js/pui.js"></script>
 </body>
 </html>
